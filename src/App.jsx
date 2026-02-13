@@ -73,7 +73,6 @@ function App() {
       <Header view={view} setView={setView} />
       
       <div className="content-wrapper">
-        {/* ABA: DASHBOARD */}
         {view === "dashboard" && (
           <>
             <MonthPicker
@@ -99,7 +98,6 @@ function App() {
           </>
         )}
 
-        {/* ABA: TRANSAÇÕES */}
         {view === "transactions" && (
           <>
             <TransactionList
@@ -111,7 +109,6 @@ function App() {
           </>
         )}
 
-        {/* ABA: ANÁLISE */}
         {view === "analysis" && (
           <>
             <MonthPicker
@@ -141,7 +138,6 @@ function App() {
           </>
         )}
 
-        {/* ABA: METAS */}
         {view === "goals" && (
           <>
             <SavingsGoals 
@@ -151,7 +147,6 @@ function App() {
           </>
         )}
 
-        {/* ABA: CATEGORIAS */}
         {view === "categories" && (
           <>
             <CategoryManager />
