@@ -120,7 +120,7 @@ const Charts = ({ transactions = [], categories = [] }) => {
             <h2 className="section-title">Distribuição de Gastos</h2>
             <p className="stat-detail">Comparação por categoria e orçamento</p>
           </div>
-          <div className="view-mode-toggle" style={{ margin: 0}}>
+          <div className="view-mode-toggle">
             <button 
               className={`view-btn ${chartType === "bar" ? "active" : ""}`}
               onClick={() => setChartType("bar")}
