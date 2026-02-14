@@ -17,13 +17,6 @@ const CategoryManager = () => {
     "🎬", "💡", "🎵", "💳", "🏋️", "🐕", "🎮", "☕",
     "🛒", "📱", "💄", "🔧", "🎨", "🏥", "🚌", "🍕"
   ];
-  
-  const colorSuggestions = [
-    "#A85252", "#8A7866", "#7FA87F", "#D4A574", 
-    "#8B3D3D", "#C46B6B", "#6B2D2D", "#A89787",
-    "#D89090", "#C4B5A4", "#6B9B6B", "#8A5C5C",
-    "#9B7B5C", "#7B8A7B", "#A87B7B", "#7B7B9B"
-  ];
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -105,7 +98,8 @@ const CategoryManager = () => {
                     borderRadius: '8px',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center'
+                    justifyContent: 'center',
+                    flexShrink: 0
                   }}
                 >
                   {category.icon}
@@ -179,23 +173,16 @@ const CategoryManager = () => {
                 <p style={{ fontSize: '12px', color: 'var(--beige-600)', marginTop: '8px', marginBottom: '12px' }}>
                   Sugestões rápidas:
                 </p>
-                <div style={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: 'repeat(8, 1fr)', 
-                  gap: '6px'
-                }}>
+                <div className="emoji-grid">
                   {iconSuggestions.map(icon => (
                     <button
                       key={icon}
                       type="button"
                       onClick={() => setFormData({ ...formData, icon })}
-                      className="btn btn-secondary"
+                      className="emoji-btn"
                       style={{
-                        fontSize: '24px',
-                        padding: '10px',
-                        aspectRatio: '1',
                         background: formData.icon === icon ? 'var(--burgundy-100)' : 'white',
-                        border: formData.icon === icon ? '2px solid var(--burgundy-700)' : '1px solid var(--beige-300)'
+                        borderColor: formData.icon === icon ? 'var(--burgundy-700)' : 'var(--beige-300)'
                       }}
                     >
                       {icon}

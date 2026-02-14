@@ -125,7 +125,7 @@ const TransactionList = ({ transactions, onAddTransaction, onDeleteTransaction, 
                       : category?.color ? `${category.color}20` : 'rgba(212, 165, 116, 0.15)'
                   }}
                 >
-                  {category ? category.icon : '💰'}
+                  {transaction.type === "income" ? '💰' : (category ? category.icon : '📁')}
                 </div>
                 
                 <div className="transaction-info">
@@ -134,10 +134,16 @@ const TransactionList = ({ transactions, onAddTransaction, onDeleteTransaction, 
                   </div>
                   <div className="transaction-meta">
                     <span>{formatDate(transaction.date)}</span>
-                    {category && (
+                    {transaction.type === "expense" && category && (
                       <>
                         <span>•</span>
                         <span>{category.name}</span>
+                      </>
+                    )}
+                    {transaction.type === "income" && (
+                      <>
+                        <span>•</span>
+                        <span>Receita</span>
                       </>
                     )}
                   </div>
