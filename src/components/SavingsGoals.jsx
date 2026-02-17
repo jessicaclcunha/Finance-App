@@ -51,29 +51,17 @@ const AnimatedProgressBar = ({ progress, isCompleted, isOverdue }) => {
       <div className="goal-progress-bar">
         <div
           className={`goal-progress-fill ${shine ? "goal-shine" : ""}`}
-          style={{
-            width: `${displayed}%`,
-            background: getBarColor(),
-          }}
+          style={{ width: `${displayed}%`, background: getBarColor() }}
         />
         {displayed > 2 && displayed < 100 && (
-          <div
-            className="goal-progress-tip"
-            style={{ left: `${displayed}%` }}
-          />
+          <div className="goal-progress-tip" style={{ left: `${displayed}%` }} />
         )}
       </div>
-
       {particles.map(p => (
-        <span
-          key={p.id}
-          className="goal-particle"
-          style={{ "--angle": `${p.angle}deg` }}
-        >
+        <span key={p.id} className="goal-particle" style={{ "--angle": `${p.angle}deg` }}>
           {p.emoji}
         </span>
       ))}
-
       <div className="goal-milestones">
         {[25, 50, 75].map(m => (
           <div
@@ -88,22 +76,108 @@ const AnimatedProgressBar = ({ progress, isCompleted, isOverdue }) => {
   );
 };
 
+/* ── Modal de edição de meta ── */
+const GoalEditModal = ({ goal, onSave, onCancel }) => {
+  const [formData, setFormData] = useState({
+    name: goal.name,
+    target: goal.target,
+    deadline: goal.deadline,
+    saved: goal.saved,
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSave({
+      ...formData,
+      target: parseFloat(formData.target),
+      saved: parseFloat(formData.saved),
+    });
+  };
+
+  return (
+    <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) onCancel(); }}>
+      <div className="modal-content">
+        <div className="modal-header">
+          <h3 className="modal-title">Editar Meta</h3>
+          <button onClick={onCancel} className="modal-close">×</button>
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label className="form-label">Nome da Meta</label>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className="form-input"
+              required
+              autoFocus
+            />
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">Valor Alvo (€)</label>
+              <input
+                type="number"
+                value={formData.target}
+                onChange={(e) => setFormData({ ...formData, target: e.target.value })}
+                className="form-input"
+                step="0.01"
+                min="0.01"
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Data Alvo</label>
+              <input
+                type="date"
+                value={formData.deadline}
+                onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
+                className="form-input"
+                required
+              />
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Valor Poupado (€)</label>
+            <input
+              type="number"
+              value={formData.saved}
+              onChange={(e) => setFormData({ ...formData, saved: e.target.value })}
+              className="form-input"
+              step="0.01"
+              min="0"
+              required
+            />
+          </div>
+
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>Guardar</button>
+            <button type="button" onClick={onCancel} className="btn btn-secondary" style={{ flex: 1 }}>Cancelar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+/* ── Componente principal ── */
 const SavingsGoals = ({ transactions, selectedDate }) => {
   const [goals, setGoals] = useState(() => {
     const saved = localStorage.getItem("savingsGoals");
     return saved ? JSON.parse(saved) : [];
   });
-  
+
   const [isAddingGoal, setIsAddingGoal] = useState(false);
+  const [editingGoalId, setEditingGoalId] = useState(null);
   const [newGoal, setNewGoal] = useState({ name: "", target: "", deadline: "" });
 
-  const income = transactions
-    .filter(t => t.type === "income")
-    .reduce((sum, t) => sum + t.amount, 0);
-
-  const expenses = transactions
-    .filter(t => t.type === "expense")
-    .reduce((sum, t) => sum + t.amount, 0);
+  const saveGoals = (updated) => {
+    setGoals(updated);
+    localStorage.setItem("savingsGoals", JSON.stringify(updated));
+  };
 
   const handleAddGoal = (e) => {
     e.preventDefault();
@@ -113,29 +187,28 @@ const SavingsGoals = ({ transactions, selectedDate }) => {
       target: parseFloat(newGoal.target),
       deadline: newGoal.deadline,
       saved: 0,
-      createdAt: Date.now()
+      createdAt: Date.now(),
     };
-    const updatedGoals = [...goals, goal];
-    setGoals(updatedGoals);
-    localStorage.setItem("savingsGoals", JSON.stringify(updatedGoals));
+    saveGoals([...goals, goal]);
     setNewGoal({ name: "", target: "", deadline: "" });
     setIsAddingGoal(false);
   };
 
+  const handleEditGoal = (id, updated) => {
+    saveGoals(goals.map(g => g.id === id ? { ...g, ...updated } : g));
+    setEditingGoalId(null);
+  };
+
   const handleDeleteGoal = (id) => {
     if (window.confirm("Eliminar esta meta?")) {
-      const updatedGoals = goals.filter(g => g.id !== id);
-      setGoals(updatedGoals);
-      localStorage.setItem("savingsGoals", JSON.stringify(updatedGoals));
+      saveGoals(goals.filter(g => g.id !== id));
     }
   };
 
   const handleUpdateSaved = (id, amount) => {
-    const updatedGoals = goals.map(g => 
+    saveGoals(goals.map(g =>
       g.id === id ? { ...g, saved: Math.max(0, g.saved + amount) } : g
-    );
-    setGoals(updatedGoals);
-    localStorage.setItem("savingsGoals", JSON.stringify(updatedGoals));
+    ));
   };
 
   const handleCustomAmount = (id) => {
@@ -144,6 +217,8 @@ const SavingsGoals = ({ transactions, selectedDate }) => {
       handleUpdateSaved(id, parseFloat(amount));
     }
   };
+
+  const editingGoal = goals.find(g => g.id === editingGoalId);
 
   return (
     <section className="section">
@@ -156,6 +231,7 @@ const SavingsGoals = ({ transactions, selectedDate }) => {
         )}
       </div>
 
+      {/* Formulário nova meta */}
       {isAddingGoal && (
         <div className="card fade-in" style={{ marginBottom: '24px' }}>
           <form onSubmit={handleAddGoal}>
@@ -205,6 +281,7 @@ const SavingsGoals = ({ transactions, selectedDate }) => {
         </div>
       )}
 
+      {/* Lista de metas */}
       {goals.length === 0 && !isAddingGoal ? (
         <div className="empty-state">
           <div className="empty-icon">🎯</div>
@@ -226,7 +303,22 @@ const SavingsGoals = ({ transactions, selectedDate }) => {
                     {isCompleted && <span className="goal-trophy">🏆 </span>}
                     {goal.name}
                   </h3>
-                  <button onClick={() => handleDeleteGoal(goal.id)} className="goal-delete">×</button>
+                  <div className="goal-header-actions">
+                    <button
+                      onClick={() => setEditingGoalId(goal.id)}
+                      className="goal-edit"
+                      title="Editar meta"
+                    >
+                      ✎
+                    </button>
+                    <button
+                      onClick={() => handleDeleteGoal(goal.id)}
+                      className="goal-delete"
+                      title="Eliminar meta"
+                    >
+                      ×
+                    </button>
+                  </div>
                 </div>
 
                 <AnimatedProgressBar progress={progress} isCompleted={isCompleted} isOverdue={isOverdue} />
@@ -239,11 +331,11 @@ const SavingsGoals = ({ transactions, selectedDate }) => {
                   <div className="goal-percentage">{Math.min(progress, 100).toFixed(0)}%</div>
                 </div>
 
-                <div className="goal-deadline" style={{ 
-                  color: isOverdue ? 'var(--error)' : isCompleted ? 'var(--success)' : 'var(--beige-700)' 
+                <div className="goal-deadline" style={{
+                  color: isOverdue ? 'var(--error)' : isCompleted ? 'var(--success)' : 'var(--beige-700)'
                 }}>
-                  {isCompleted ? '✓ Meta atingida! Parabéns! 🎉' : 
-                   isOverdue ? `⚠ Prazo expirou há ${Math.abs(daysLeft)} dias` : 
+                  {isCompleted ? '✓ Meta atingida! Parabéns! 🎉' :
+                   isOverdue ? `⚠ Prazo expirou há ${Math.abs(daysLeft)} dias` :
                    `${daysLeft} dias restantes`}
                 </div>
 
@@ -259,6 +351,15 @@ const SavingsGoals = ({ transactions, selectedDate }) => {
             );
           })}
         </div>
+      )}
+
+      {/* Modal de edição */}
+      {editingGoal && (
+        <GoalEditModal
+          goal={editingGoal}
+          onSave={(updated) => handleEditGoal(editingGoal.id, updated)}
+          onCancel={() => setEditingGoalId(null)}
+        />
       )}
     </section>
   );
