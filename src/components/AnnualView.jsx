@@ -1,10 +1,13 @@
+import { useState } from "react";
+
 const AnnualView = ({ allTransactions, selectedYear }) => {
+  const [hoveredMonth, setHoveredMonth] = useState(null);
+
   const months = [
     "Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
     "Jul", "Ago", "Set", "Out", "Nov", "Dez"
   ];
 
-  // Agrupar por mês do ano selecionado
   const monthlyData = months.map((month, index) => {
     const monthTransactions = allTransactions.filter(t => {
       const date = new Date(t.date);
@@ -41,15 +44,18 @@ const AnnualView = ({ allTransactions, selectedYear }) => {
     balance: yearTotals.balance / 12
   };
 
-  // Encontrar melhor e pior mês
   const monthsWithData = monthlyData.filter(m => m.count > 0);
-  const bestMonth = monthsWithData.length > 0 
+  const bestMonth = monthsWithData.length > 0
     ? monthsWithData.reduce((best, current) => current.balance > best.balance ? current : best)
     : null;
-
   const worstMonth = monthsWithData.length > 0
     ? monthsWithData.reduce((worst, current) => current.balance < worst.balance ? current : worst)
     : null;
+
+  // Bar chart max
+  const maxVal = Math.max(...monthlyData.map(m => Math.max(m.income, m.expenses)), 1);
+  const currentMonth = new Date().getMonth();
+  const currentYear = new Date().getFullYear();
 
   return (
     <section className="section">
@@ -57,7 +63,7 @@ const AnnualView = ({ allTransactions, selectedYear }) => {
         Resumo de {selectedYear}
       </h2>
 
-      {/* Resumo do Ano - Compacto */}
+      {/* Totais anuais */}
       <div className="annual-header">
         <div className="annual-total-card">
           <div className="annual-total-icon">
@@ -77,15 +83,11 @@ const AnnualView = ({ allTransactions, selectedYear }) => {
         <div className="annual-stats-mini">
           <div className="annual-stat-mini">
             <div className="annual-stat-mini-label">Receitas</div>
-            <div className="annual-stat-mini-value positive">
-              +{yearTotals.income.toFixed(2)}€
-            </div>
+            <div className="annual-stat-mini-value positive">+{yearTotals.income.toFixed(2)}€</div>
           </div>
           <div className="annual-stat-mini">
             <div className="annual-stat-mini-label">Despesas</div>
-            <div className="annual-stat-mini-value negative">
-              −{yearTotals.expenses.toFixed(2)}€
-            </div>
+            <div className="annual-stat-mini-value negative">−{yearTotals.expenses.toFixed(2)}€</div>
           </div>
           {bestMonth && (
             <div className="annual-stat-mini">
@@ -102,6 +104,82 @@ const AnnualView = ({ allTransactions, selectedYear }) => {
         </div>
       </div>
 
+      {/* Gráfico de barras visual */}
+      <div className="annual-chart-section">
+        <div className="annual-chart-legend">
+          <span className="chart-legend-dot income-dot"></span>
+          <span>Receitas</span>
+          <span className="chart-legend-dot expenses-dot"></span>
+          <span>Despesas</span>
+        </div>
+
+        <div className="annual-bar-chart">
+          {monthlyData.map((data, index) => {
+            const isCurrent = index === currentMonth && selectedYear === currentYear;
+            const isHovered = hoveredMonth === index;
+            const hasData = data.count > 0;
+            const incomeH = (data.income / maxVal) * 100;
+            const expensesH = (data.expenses / maxVal) * 100;
+
+            return (
+              <div
+                key={index}
+                className={`annual-bar-col ${isCurrent ? "current-month" : ""} ${!hasData ? "no-data" : ""}`}
+                onMouseEnter={() => setHoveredMonth(index)}
+                onMouseLeave={() => setHoveredMonth(null)}
+              >
+                {/* Tooltip */}
+                {isHovered && hasData && (
+                  <div className="bar-tooltip">
+                    <strong>{data.month}</strong>
+                    <div className="bar-tooltip-row">
+                      <span style={{ color: 'var(--success)' }}>↑</span>
+                      <span>{data.income.toFixed(0)}€</span>
+                    </div>
+                    <div className="bar-tooltip-row">
+                      <span style={{ color: 'var(--error)' }}>↓</span>
+                      <span>{data.expenses.toFixed(0)}€</span>
+                    </div>
+                    <div className="bar-tooltip-row" style={{ borderTop: '1px solid var(--beige-300)', paddingTop: '4px', marginTop: '2px' }}>
+                      <span style={{ color: data.balance >= 0 ? 'var(--success)' : 'var(--error)', fontWeight: 600 }}>
+                        {data.balance >= 0 ? '+' : ''}{data.balance.toFixed(0)}€
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Barras */}
+                <div className="annual-bars">
+                  <div
+                    className="annual-bar income-bar"
+                    style={{ height: hasData ? `${incomeH}%` : '0%', animationDelay: `${index * 40}ms` }}
+                  />
+                  <div
+                    className="annual-bar expenses-bar"
+                    style={{ height: hasData ? `${expensesH}%` : '0%', animationDelay: `${index * 40 + 20}ms` }}
+                  />
+                </div>
+
+                {/* Saldo indicator abaixo das barras */}
+                {hasData && (
+                  <div
+                    className="annual-bar-balance"
+                    style={{ color: data.balance >= 0 ? 'var(--success)' : 'var(--error)' }}
+                  >
+                    <div className={`balance-dot ${data.balance >= 0 ? 'positive-dot' : 'negative-dot'}`} />
+                  </div>
+                )}
+
+                <div className={`annual-bar-label ${isCurrent ? "current-label" : ""}`}>
+                  {data.month}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Tabela resumo */}
       <div className="annual-table-container">
         <table className="annual-table">
           <thead>
@@ -115,7 +193,10 @@ const AnnualView = ({ allTransactions, selectedYear }) => {
           </thead>
           <tbody>
             {monthlyData.map((data, index) => (
-              <tr key={index} className={data.count === 0 ? 'empty-month' : ''}>
+              <tr
+                key={index}
+                className={`${data.count === 0 ? 'empty-month' : ''} ${index === currentMonth && selectedYear === currentYear ? 'current-month-row' : ''}`}
+              >
                 <td className="month-name">{data.month}</td>
                 <td className="amount-positive">
                   {data.income > 0 ? `+${data.income.toFixed(2)}€` : '—'}
@@ -125,8 +206,8 @@ const AnnualView = ({ allTransactions, selectedYear }) => {
                 </td>
                 <td className={data.balance >= 0 ? 'amount-positive' : 'amount-negative'}>
                   <strong>
-                    {data.balance !== 0 
-                      ? `${data.balance >= 0 ? '+' : ''}${data.balance.toFixed(2)}€` 
+                    {data.balance !== 0
+                      ? `${data.balance >= 0 ? '+' : ''}${data.balance.toFixed(2)}€`
                       : '—'}
                   </strong>
                 </td>
