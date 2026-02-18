@@ -12,8 +12,8 @@ const Header = ({ view, setView }) => {
     <header className="main-header">
       <div className="header-content">
         <div className="logo-section">
-          <h1>Finanças</h1>
-          <span className="tagline">Gestão Pessoal</span>
+          <h1>PureProsper</h1>
+          <span className="tagline">Gestão de Finanças Pessoal</span>
         </div>
         
         {/* Botão Hamburger - só visível em mobile */}

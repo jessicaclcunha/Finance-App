@@ -588,7 +588,7 @@ body {
 @media (min-width: 1024px) {
   .dashboard-container {
     display: grid;
-    grid-template-columns: 1.5fr 1fr;
+    grid-template-columns: 1fr 1fr;
     gap: 20px;
   }
 
@@ -604,9 +604,6 @@ body {
     font-size: 48px;
   }
 
-  .stats-compact {
-    grid-template-columns: 1fr;
-  }
 
   .stat-compact-value {
     font-size: 28px;
