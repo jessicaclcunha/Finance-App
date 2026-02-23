@@ -14,77 +14,108 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Le
 
 const Charts = ({ transactions = [], categories = [] }) => {
   const [chartType, setChartType] = useState("bar");
+  const [dataMode, setDataMode] = useState("expenses"); // "expenses" | "income" | "both"
 
   if (!categories || categories.length === 0) return null;
 
-  // Processamento de dados
-  const categoryData = categories.map((cat) => {
+  // Despesas por categoria
+  const categoryExpenseData = categories.map((cat) => {
     const spent = transactions
       .filter((t) => t.type === "expense" && t.categoryId === cat.id)
       .reduce((sum, t) => sum + t.amount, 0);
-    
     return {
-      name: cat.name,
-      spent: spent,
+      name: `${cat.icon} ${cat.name}`,
+      spent,
       budget: cat.budget || 0,
       color: cat.color,
-      icon: cat.icon,
     };
   });
 
-  const categoriesWithExpenses = categoryData.filter(cat => cat.spent > 0);
+  // Totais globais para doughnut receitas vs despesas
+  const totalIncome = transactions
+    .filter(t => t.type === "income")
+    .reduce((sum, t) => sum + t.amount, 0);
+  const totalExpenses = transactions
+    .filter(t => t.type === "expense")
+    .reduce((sum, t) => sum + t.amount, 0);
 
-  // Configuração do Gráfico de Barras (Gasto vs Orçamento)
+  // Gráfico de Barras — Gasto vs Orçamento (por categoria)
   const barData = {
-    labels: categoryData.map((cat) => cat.name),
+    labels: categoryExpenseData.map((cat) => cat.name),
     datasets: [
       {
         label: "Gasto Real",
-        data: categoryData.map((cat) => cat.spent),
-        backgroundColor: categoryData.map((cat) => cat.color),
+        data: categoryExpenseData.map((cat) => cat.spent),
+        backgroundColor: categoryExpenseData.map((cat) => cat.color),
         borderRadius: 6,
         borderSkipped: false,
-        barThickness: 25,
+        barThickness: 22,
       },
       {
         label: "Orçamento",
-        data: categoryData.map((cat) => cat.budget),
-        backgroundColor: "rgba(229, 221, 206, 0.4)", // var(--beige-300) com transparência
+        data: categoryExpenseData.map((cat) => cat.budget),
+        backgroundColor: "rgba(229, 221, 206, 0.5)",
         borderRadius: 6,
         borderSkipped: false,
-        barThickness: 25,
+        barThickness: 22,
       }
     ],
   };
 
-  // Configuração do Gráfico de Rosca (Distribuição %)
-  const doughnutData = {
-    labels: categoriesWithExpenses.map((cat) => cat.name),
-    datasets: [
-      {
-        data: categoriesWithExpenses.map((cat) => cat.spent),
-        backgroundColor: categoriesWithExpenses.map((cat) => cat.color),
-        borderWidth: 2,
-        borderColor: "#ffffff",
-        hoverOffset: 10,
-        cutout: "60%", // Transforma em "Donut" elegante
-      },
-    ],
+  // Doughnut por categoria (só despesas com valor)
+  const categoriesWithExpenses = categoryExpenseData.filter(cat => cat.spent > 0);
+
+  // Doughnut receitas vs despesas
+  const overviewDoughnutData = {
+    labels: ["Receitas", "Despesas"],
+    datasets: [{
+      data: [totalIncome, totalExpenses],
+      backgroundColor: ["#6B9B6B", "#A85252"],
+      borderWidth: 2,
+      borderColor: "#ffffff",
+      hoverOffset: 10,
+    }]
   };
 
-  const commonOptions = {
+  // Doughnut só categorias de despesa
+  const categoryDoughnutData = {
+    labels: categoriesWithExpenses.map((cat) => cat.name),
+    datasets: [{
+      data: categoriesWithExpenses.map((cat) => cat.spent),
+      backgroundColor: categoriesWithExpenses.map((cat) => cat.color),
+      borderWidth: 2,
+      borderColor: "#ffffff",
+      hoverOffset: 10,
+    }]
+  };
+
+  const barOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: {
-        display: chartType === "doughnut",
-        position: "bottom",
-        labels: {
-          padding: 20,
-          usePointStyle: true,
-          font: { family: "Inter", size: 12 }
+      legend: { display: true, position: "top", labels: { padding: 16, usePointStyle: true, font: { family: "Inter", size: 12 } } },
+      tooltip: {
+        backgroundColor: "#6B2D2D",
+        padding: 12,
+        bodyFont: { family: "Inter" },
+        titleFont: { family: "Crimson Pro", size: 15 },
+        callbacks: {
+          label: (context) => ` ${context.dataset.label}: ${(context.parsed.y || 0).toFixed(2)}€`
         }
-      },
+      }
+    },
+    scales: {
+      x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+      y: { grid: { color: "#F0EBE0" }, ticks: { callback: (v) => `${v}€` } }
+    }
+  };
+
+  const doughnutOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    cutout: "60%",
+    plugins: {
+      legend: { display: true, position: "bottom", labels: { padding: 20, usePointStyle: true, font: { family: "Inter", size: 12 } } },
       tooltip: {
         backgroundColor: "#6B2D2D",
         padding: 12,
@@ -92,24 +123,14 @@ const Charts = ({ transactions = [], categories = [] }) => {
         titleFont: { family: "Crimson Pro", size: 15 },
         callbacks: {
           label: (context) => {
-            const value = context.parsed.y || context.parsed || 0;
-            if (chartType === "doughnut") {
-              const total = context.dataset.data.reduce((a, b) => a + b, 0);
-              const percentage = ((value / total) * 100).toFixed(1);
-              return ` ${context.label}: ${value.toFixed(2)}€ (${percentage}%)`;
-            }
-            return ` ${context.dataset.label}: ${value.toFixed(2)}€`;
+            const value = context.parsed || 0;
+            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+            const pct = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+            return ` ${context.label}: ${value.toFixed(2)}€ (${pct}%)`;
           }
         }
       }
-    },
-    scales: chartType === "bar" ? {
-      x: { grid: { display: false } },
-      y: { 
-        grid: { color: "#F0EBE0" },
-        ticks: { callback: (v) => `${v}€` }
-      }
-    } : {}
+    }
   };
 
   return (
@@ -120,27 +141,50 @@ const Charts = ({ transactions = [], categories = [] }) => {
             <h2 className="section-title">Distribuição de Gastos</h2>
             <p className="stat-detail">Comparação por categoria e orçamento</p>
           </div>
-          <div className="view-mode-toggle">
-            <button 
-              className={`view-btn ${chartType === "bar" ? "active" : ""}`}
-              onClick={() => setChartType("bar")}
-            >
-              Orçamento
-            </button>
-            <button 
-              className={`view-btn ${chartType === "doughnut" ? "active" : ""}`}
-              onClick={() => setChartType("doughnut")}
-            >
-              Percentagem
-            </button>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
+            <div className="view-mode-toggle">
+              <button className={`view-btn ${chartType === "bar" ? "active" : ""}`} onClick={() => setChartType("bar")}>
+                Barras
+              </button>
+              <button className={`view-btn ${chartType === "doughnut-categories" ? "active" : ""}`} onClick={() => setChartType("doughnut-categories")}>
+                Categorias %
+              </button>
+              <button className={`view-btn ${chartType === "doughnut-overview" ? "active" : ""}`} onClick={() => setChartType("doughnut-overview")}>
+                Receitas vs Despesas
+              </button>
+            </div>
           </div>
         </div>
 
-        <div className="chart-canvas" style={{ height: "250px"}}>
-          {chartType === "bar" ? (
-            <Bar data={barData} options={commonOptions} />
-          ) : (
-            <Doughnut data={doughnutData} options={commonOptions} />
+        {/* Resumo rápido receitas/despesas */}
+        <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
+          <div style={{ flex: 1, background: 'rgba(107,155,107,0.1)', borderRadius: '8px', padding: '10px 14px', border: '1px solid rgba(107,155,107,0.2)' }}>
+            <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--beige-700)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Receitas</div>
+            <div style={{ fontSize: '20px', fontFamily: 'var(--font-serif)', color: 'var(--success)' }}>+{totalIncome.toFixed(2)}€</div>
+          </div>
+          <div style={{ flex: 1, background: 'rgba(168,82,82,0.08)', borderRadius: '8px', padding: '10px 14px', border: '1px solid rgba(168,82,82,0.15)' }}>
+            <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--beige-700)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Despesas</div>
+            <div style={{ fontSize: '20px', fontFamily: 'var(--font-serif)', color: 'var(--warning)' }}>−{totalExpenses.toFixed(2)}€</div>
+          </div>
+          <div style={{ flex: 1, background: 'var(--beige-100)', borderRadius: '8px', padding: '10px 14px', border: '1px solid var(--beige-300)' }}>
+            <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--beige-700)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Saldo</div>
+            <div style={{ fontSize: '20px', fontFamily: 'var(--font-serif)', color: (totalIncome - totalExpenses) >= 0 ? 'var(--success)' : 'var(--error)' }}>
+              {(totalIncome - totalExpenses) >= 0 ? '+' : ''}{(totalIncome - totalExpenses).toFixed(2)}€
+            </div>
+          </div>
+        </div>
+
+        <div className="chart-canvas" style={{ height: "280px" }}>
+          {chartType === "bar" && <Bar data={barData} options={barOptions} />}
+          {chartType === "doughnut-categories" && (
+            categoriesWithExpenses.length > 0
+              ? <Doughnut data={categoryDoughnutData} options={doughnutOptions} />
+              : <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--beige-600)' }}>Sem despesas por categoria neste período</div>
+          )}
+          {chartType === "doughnut-overview" && (
+            (totalIncome + totalExpenses) > 0
+              ? <Doughnut data={overviewDoughnutData} options={doughnutOptions} />
+              : <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--beige-600)' }}>Sem dados neste período</div>
           )}
         </div>
       </div>

@@ -10,9 +10,9 @@
 [![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
 [![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 [![Chart.js](https://img.shields.io/badge/Chart.js-FF6384?style=for-the-badge&logo=chartdotjs&logoColor=white)](https://www.chartjs.org/)
-[![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://finance-atatne2pq-jessicas-projects-19cffcf6.vercel.app)
+[![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://pure-prosper-bda0ic4df-jessicas-projects-19cffcf6.vercel.app)
 
-🔗 [Ver Demo ao Vivo](https://finance-atatne2pq-jessicas-projects-19cffcf6.vercel.app) &nbsp;·&nbsp; [Repositório](https://github.com/jessicaclcunha/Finance-App)
+🔗 [Ver Demo ao Vivo](https://pure-prosper-bda0ic4df-jessicas-projects-19cffcf6.vercel.app) &nbsp;·&nbsp; [Repositório](https://github.com/jessicaclcunha/Finance-App)
 
 > ⚠️ Projeto em desenvolvimento ativo — funcionalidades podem estar incompletas ou sujeitas a alterações.
 
@@ -20,7 +20,7 @@
 
 ---
 
-## 📋 Índice
+## Índice
 
 - [Sobre o Projeto](#-sobre-o-projeto)
 - [Funcionalidades](#-funcionalidades)

@@ -2780,3 +2780,39 @@ input[type="date"].form-input {
 .current-month-row td {
   font-weight: 600;
 }
+
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(0) rotate(0deg) scale(0.8);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(120px) rotate(360deg) scale(1.2);
+    opacity: 0;
+  }
+}
+
+.goal-celebrating {
+  box-shadow: 0 0 0 3px var(--success), var(--shadow-lg) !important;
+  border-color: var(--success) !important;
+}
+
+.annual-table-container .hide-mobile {
+  display: table-cell !important;
+}
+
+@media (max-width: 480px) {
+  .annual-table th,
+  .annual-table td {
+    padding: 6px 5px;
+    font-size: 12px;
+  }
+  .annual-table tfoot td {
+    padding: 8px 5px;
+    font-size: 12px;
+  }
+}
+
+.chart-header .view-mode-toggle {
+  flex-wrap: wrap;
+}

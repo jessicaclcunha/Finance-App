@@ -46,7 +46,7 @@ function App() {
   };
 
   const handleEditTransaction = (id, updatedData) => {
-    setTransactions(transactions.map(t => 
+    setTransactions(transactions.map(t =>
       t.id === id ? { ...t, ...updatedData } : t
     ));
   };
@@ -71,7 +71,7 @@ function App() {
   return (
     <div className="app-container">
       <Header view={view} setView={setView} />
-      
+
       <div className="content-wrapper">
         {view === "dashboard" && (
           <>
@@ -84,29 +84,28 @@ function App() {
             {viewMode === "month" ? (
               <>
                 <Dashboard transactions={filteredTransactions} />
-                <MonthInsights 
+                <MonthInsights
                   transactions={filteredTransactions}
                   selectedDate={selectedDate}
                 />
               </>
             ) : (
-              <AnnualView 
+              <AnnualView
                 allTransactions={transactions}
                 selectedYear={selectedDate.year}
+                compact={true}
               />
             )}
           </>
         )}
 
         {view === "transactions" && (
-          <>
-            <TransactionList
-              transactions={filteredTransactions}
-              onAddTransaction={handleAddTransaction}
-              onDeleteTransaction={handleDeleteTransaction}
-              onEditTransaction={handleEditTransaction}
-            />
-          </>
+          <TransactionList
+            transactions={filteredTransactions}
+            onAddTransaction={handleAddTransaction}
+            onDeleteTransaction={handleDeleteTransaction}
+            onEditTransaction={handleEditTransaction}
+          />
         )}
 
         {view === "analysis" && (
@@ -118,20 +117,22 @@ function App() {
               onViewModeChange={setViewMode}
             />
             {viewMode === "month" ? (
-              <MonthlyComparison allTransactions={transactions} />
+              <>
+                <MonthlyComparison allTransactions={transactions} />
+                <Charts
+                  transactions={filteredTransactions}
+                  categories={categories}
+                />
+              </>
             ) : (
-              <AnnualView 
+              <AnnualView
                 allTransactions={transactions}
                 selectedYear={selectedDate.year}
+                compact={false}
               />
             )}
-            
-            <Charts 
-              transactions={filteredTransactions}
-              categories={categories} 
-            />
-            
-            <ExportData 
+
+            <ExportData
               transactions={transactions}
               categories={categories}
             />
@@ -139,18 +140,14 @@ function App() {
         )}
 
         {view === "goals" && (
-          <>
-            <SavingsGoals 
-              transactions={filteredTransactions}
-              selectedDate={selectedDate}
-            />
-          </>
+          <SavingsGoals
+            transactions={filteredTransactions}
+            selectedDate={selectedDate}
+          />
         )}
 
         {view === "categories" && (
-          <>
-            <CategoryManager />
-          </>
+          <CategoryManager />
         )}
       </div>
     </div>

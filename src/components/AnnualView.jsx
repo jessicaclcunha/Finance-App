@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-const AnnualView = ({ allTransactions, selectedYear }) => {
+const AnnualView = ({ allTransactions, selectedYear, compact = false }) => {
   const [hoveredMonth, setHoveredMonth] = useState(null);
 
   const months = [
@@ -52,23 +52,96 @@ const AnnualView = ({ allTransactions, selectedYear }) => {
     ? monthsWithData.reduce((worst, current) => current.balance < worst.balance ? current : worst)
     : null;
 
-  // Bar chart max
   const maxVal = Math.max(...monthlyData.map(m => Math.max(m.income, m.expenses)), 1);
   const currentMonth = new Date().getMonth();
   const currentYear = new Date().getFullYear();
 
+  if (compact) {
+    return (
+      <section className="section">
+        <h2 className="section-title" style={{ marginBottom: '16px' }}>
+          Resumo de {selectedYear}
+        </h2>
+
+        {/* Totais rápidos */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '16px' }}>
+          <div className="stat-compact">
+            <div className="stat-compact-label">Receitas</div>
+            <div className="stat-compact-value positive">+{yearTotals.income.toFixed(0)}€</div>
+          </div>
+          <div className="stat-compact">
+            <div className="stat-compact-label">Despesas</div>
+            <div className="stat-compact-value negative">−{yearTotals.expenses.toFixed(0)}€</div>
+          </div>
+          <div className="stat-compact">
+            <div className="stat-compact-label">Saldo</div>
+            <div className={`stat-compact-value ${yearTotals.balance >= 0 ? 'positive' : 'negative'}`}>
+              {yearTotals.balance >= 0 ? '+' : ''}{yearTotals.balance.toFixed(0)}€
+            </div>
+          </div>
+        </div>
+
+        {/* Gráfico de barras compacto */}
+        <div className="annual-chart-section">
+          <div className="annual-chart-legend">
+            <span className="chart-legend-dot income-dot"></span>
+            <span>Receitas</span>
+            <span className="chart-legend-dot expenses-dot" style={{marginLeft: '8px'}}></span>
+            <span>Despesas</span>
+          </div>
+          <div className="annual-bar-chart" style={{ height: '120px' }}>
+            {monthlyData.map((data, index) => {
+              const isCurrent = index === currentMonth && selectedYear === currentYear;
+              const isHovered = hoveredMonth === index;
+              const hasData = data.count > 0;
+              const incomeH = (data.income / maxVal) * 100;
+              const expensesH = (data.expenses / maxVal) * 100;
+
+              return (
+                <div
+                  key={index}
+                  className={`annual-bar-col ${isCurrent ? "current-month" : ""} ${!hasData ? "no-data" : ""}`}
+                  onMouseEnter={() => setHoveredMonth(index)}
+                  onMouseLeave={() => setHoveredMonth(null)}
+                >
+                  {isHovered && hasData && (
+                    <div className="bar-tooltip">
+                      <strong>{data.month}</strong>
+                      <div className="bar-tooltip-row">
+                        <span style={{ color: 'var(--success)' }}>↑</span>
+                        <span>{data.income.toFixed(0)}€</span>
+                      </div>
+                      <div className="bar-tooltip-row">
+                        <span style={{ color: 'var(--error)' }}>↓</span>
+                        <span>{data.expenses.toFixed(0)}€</span>
+                      </div>
+                    </div>
+                  )}
+                  <div className="annual-bars">
+                    <div className="annual-bar income-bar" style={{ height: hasData ? `${incomeH}%` : '0%' }} />
+                    <div className="annual-bar expenses-bar" style={{ height: hasData ? `${expensesH}%` : '0%' }} />
+                  </div>
+                  <div className={`annual-bar-label ${isCurrent ? "current-label" : ""}`}>
+                    {data.month}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="section">
       <h2 className="section-title" style={{ marginBottom: '20px' }}>
-        Resumo de {selectedYear}
+        Análise Anual
       </h2>
 
       {/* Totais anuais */}
       <div className="annual-header">
         <div className="annual-total-card">
-          <div className="annual-total-icon">
-            {yearTotals.balance >= 0 ? '💰' : '⚠️'}
-          </div>
           <div className="annual-total-content">
             <div className="annual-total-label">Saldo Anual</div>
             <div className={`annual-total-value ${yearTotals.balance >= 0 ? 'positive' : 'negative'}`}>
@@ -109,7 +182,7 @@ const AnnualView = ({ allTransactions, selectedYear }) => {
         <div className="annual-chart-legend">
           <span className="chart-legend-dot income-dot"></span>
           <span>Receitas</span>
-          <span className="chart-legend-dot expenses-dot"></span>
+          <span className="chart-legend-dot expenses-dot" style={{marginLeft: '8px'}}></span>
           <span>Despesas</span>
         </div>
 
@@ -128,7 +201,6 @@ const AnnualView = ({ allTransactions, selectedYear }) => {
                 onMouseEnter={() => setHoveredMonth(index)}
                 onMouseLeave={() => setHoveredMonth(null)}
               >
-                {/* Tooltip */}
                 {isHovered && hasData && (
                   <div className="bar-tooltip">
                     <strong>{data.month}</strong>
@@ -148,7 +220,6 @@ const AnnualView = ({ allTransactions, selectedYear }) => {
                   </div>
                 )}
 
-                {/* Barras */}
                 <div className="annual-bars">
                   <div
                     className="annual-bar income-bar"
@@ -160,7 +231,6 @@ const AnnualView = ({ allTransactions, selectedYear }) => {
                   />
                 </div>
 
-                {/* Saldo indicator abaixo das barras */}
                 {hasData && (
                   <div
                     className="annual-bar-balance"
@@ -179,7 +249,7 @@ const AnnualView = ({ allTransactions, selectedYear }) => {
         </div>
       </div>
 
-      {/* Tabela resumo */}
+      {/* Tabela resumo - com scroll horizontal no mobile */}
       <div className="annual-table-container">
         <table className="annual-table">
           <thead>
@@ -188,7 +258,7 @@ const AnnualView = ({ allTransactions, selectedYear }) => {
               <th>Receitas</th>
               <th>Despesas</th>
               <th>Saldo</th>
-              <th className="hide-mobile">N°</th>
+              <th>N°</th>
             </tr>
           </thead>
           <tbody>
@@ -211,7 +281,7 @@ const AnnualView = ({ allTransactions, selectedYear }) => {
                       : '—'}
                   </strong>
                 </td>
-                <td className="transaction-count hide-mobile">{data.count || '—'}</td>
+                <td className="transaction-count">{data.count || '—'}</td>
               </tr>
             ))}
           </tbody>
@@ -223,7 +293,7 @@ const AnnualView = ({ allTransactions, selectedYear }) => {
               <td className={yearTotals.balance >= 0 ? 'amount-positive' : 'amount-negative'}>
                 <strong>{yearTotals.balance >= 0 ? '+' : ''}{yearTotals.balance.toFixed(2)}€</strong>
               </td>
-              <td className="transaction-count hide-mobile"><strong>{yearTotals.transactions}</strong></td>
+              <td className="transaction-count"><strong>{yearTotals.transactions}</strong></td>
             </tr>
           </tfoot>
         </table>
