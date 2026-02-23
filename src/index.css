@@ -726,6 +726,8 @@ body {
   .view-mode-toggle {
     padding: 6px;
     gap: 8px;
+    display: inline;
+    justify-content: center;
   }
 }
 
@@ -856,7 +858,7 @@ body {
 
 /* ===== BUTTONS ===== */
 .btn {
-  padding: 10px 20px;
+  padding: 10px 15px;
   font-size: 14px;
   font-weight: 500;
   font-family: var(--font-sans);

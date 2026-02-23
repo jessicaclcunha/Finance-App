@@ -84,7 +84,7 @@ const CategoryManager = () => {
       </div>
 
       {/* Filtro por tipo */}
-      <div className="view-mode-toggle" style={{ marginBottom: '20px', width: 'fit-content' }}>
+      <div className="view-mode-toggle" style={{ marginBottom: '15px'}}>
         <button className={`view-btn ${filterType === "all" ? "active" : ""}`} onClick={() => setFilterType("all")}>Todas</button>
         <button className={`view-btn ${filterType === "expense" ? "active" : ""}`} onClick={() => setFilterType("expense")}>Despesas</button>
         <button className={`view-btn ${filterType === "income" ? "active" : ""}`} onClick={() => setFilterType("income")}>Receitas</button>
