@@ -724,10 +724,11 @@ body {
 
 @media (min-width: 480px) {
   .view-mode-toggle {
+    width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
     padding: 6px;
     gap: 8px;
-    display: inline;
-    justify-content: center;
   }
 }
 
@@ -1019,7 +1020,7 @@ input[type="date"].form-input {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px;
+  padding: 20px;
   border-bottom: 1px solid var(--beige-200);
 }
 
