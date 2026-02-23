@@ -10,12 +10,12 @@ const TransactionForm = ({ onAddTransaction }) => {
   const [categoryId, setCategoryId] = useState(categories[0]?.id || "");
   const [isFormVisible, setIsFormVisible] = useState(false);
 
-  // Categorias disponíveis para cada tipo
+  // Categorias disponíveis para cada tipo.
+  // Se a categoria não tem tipo definido (criada antes da atualização),
+  // mostra-a para ambos os tipos.
   const availableCategories = categories.filter(cat => {
-    if (!cat.type || cat.type === "expense") return type === "expense";
-    if (cat.type === "income") return type === "income";
-    if (cat.type === "both") return true;
-    return false;
+    if (!cat.type || cat.type === "both") return true;
+    return cat.type === type;
   });
 
   const handleTypeChange = (newType) => {
