@@ -435,9 +435,9 @@ const SavingsGoals = ({ transactions, selectedDate }) => {
 
                 {!isCompleted && (
                   <div className="goal-actions">
+                    <button onClick={() => handleUpdateSaved(goal.id, 5)} className="btn btn-secondary btn-small">+5€</button>
                     <button onClick={() => handleUpdateSaved(goal.id, 10)} className="btn btn-secondary btn-small">+10€</button>
-                    <button onClick={() => handleUpdateSaved(goal.id, 50)} className="btn btn-secondary btn-small">+50€</button>
-                    <button onClick={() => handleUpdateSaved(goal.id, 100)} className="btn btn-secondary btn-small">+100€</button>
+                    <button onClick={() => handleUpdateSaved(goal.id, 20)} className="btn btn-secondary btn-small">+20€</button>
                     <button onClick={() => handleCustomAmount(goal.id)} className="btn btn-primary btn-small">Outro…</button>
                   </div>
                 )}

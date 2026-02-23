@@ -10,23 +10,43 @@ const TransactionForm = ({ onAddTransaction }) => {
   const [categoryId, setCategoryId] = useState(categories[0]?.id || "");
   const [isFormVisible, setIsFormVisible] = useState(false);
 
+  // Categorias disponíveis para cada tipo
+  const availableCategories = categories.filter(cat => {
+    if (!cat.type || cat.type === "expense") return type === "expense";
+    if (cat.type === "income") return type === "income";
+    if (cat.type === "both") return true;
+    return false;
+  });
+
+  const handleTypeChange = (newType) => {
+    setType(newType);
+    // Resetar categoria para a primeira disponível do novo tipo
+    const filtered = categories.filter(cat => {
+      if (!cat.type || cat.type === "expense") return newType === "expense";
+      if (cat.type === "income") return newType === "income";
+      if (cat.type === "both") return true;
+      return false;
+    });
+    if (filtered.length > 0) setCategoryId(filtered[0].id);
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!amount || !date) return;
 
+    const selectedCategory = availableCategories.find(c => c.id === parseInt(categoryId));
+
     const newTransaction = {
       id: Date.now(),
       date: new Date(date).getTime(),
-      description: description || (type === "expense" && categories.length > 0 
-        ? categories.find(c => c.id === parseInt(categoryId))?.name 
-        : type === "income" ? "Receita" : "Despesa"),
+      description: description || selectedCategory?.name || (type === "income" ? "Receita" : "Despesa"),
       amount: parseFloat(amount),
       type,
-      categoryId: type === "expense" ? parseInt(categoryId) : null,
+      categoryId: availableCategories.length > 0 ? parseInt(categoryId) : null,
     };
 
     onAddTransaction(newTransaction);
-    
+
     setDescription("");
     setAmount("");
     setDate(new Date().toISOString().split('T')[0]);
@@ -43,8 +63,8 @@ const TransactionForm = ({ onAddTransaction }) => {
 
   if (!isFormVisible) {
     return (
-      <button 
-        onClick={() => setIsFormVisible(true)} 
+      <button
+        onClick={() => setIsFormVisible(true)}
         className="btn btn-primary"
         style={{ marginBottom: '24px', width: '100%' }}
       >
@@ -59,12 +79,13 @@ const TransactionForm = ({ onAddTransaction }) => {
         <h3 className="modal-title">Nova Transação</h3>
         <button onClick={handleCancel} className="modal-close">×</button>
       </div>
-      
+
       <form onSubmit={handleSubmit}>
+        {/* Tipo */}
         <div style={{ display: 'flex', gap: '12px', marginBottom: '20px' }}>
           <button
             type="button"
-            onClick={() => setType("expense")}
+            onClick={() => handleTypeChange("expense")}
             className={type === "expense" ? "btn btn-warning" : "btn btn-secondary"}
             style={{ flex: 1 }}
           >
@@ -72,7 +93,7 @@ const TransactionForm = ({ onAddTransaction }) => {
           </button>
           <button
             type="button"
-            onClick={() => setType("income")}
+            onClick={() => handleTypeChange("income")}
             className={type === "income" ? "btn btn-success" : "btn btn-secondary"}
             style={{ flex: 1 }}
           >
@@ -80,7 +101,8 @@ const TransactionForm = ({ onAddTransaction }) => {
           </button>
         </div>
 
-        {type === "expense" && categories.length > 0 && (
+        {/* Categoria — aparece para qualquer tipo se houver categorias disponíveis */}
+        {availableCategories.length > 0 && (
           <div className="form-group">
             <label className="form-label">Categoria</label>
             <select
@@ -88,15 +110,21 @@ const TransactionForm = ({ onAddTransaction }) => {
               onChange={(e) => setCategoryId(parseInt(e.target.value))}
               className="form-select"
             >
-              {categories.map((cat) => (
+              {availableCategories.map((cat) => (
                 <option key={cat.id} value={cat.id}>
                   {cat.icon} {cat.name}
                 </option>
               ))}
             </select>
+            {availableCategories.length === 0 && (
+              <p style={{ fontSize: '12px', color: 'var(--beige-600)', marginTop: '6px' }}>
+                Crie categorias do tipo "{type === "income" ? "Receita" : "Despesa"}" ou "Ambos" para as ver aqui.
+              </p>
+            )}
           </div>
         )}
 
+        {/* Descrição — sem autoFocus para não abrir teclado automaticamente */}
         <div className="form-group">
           <label className="form-label">Descrição (opcional)</label>
           <input
@@ -105,7 +133,6 @@ const TransactionForm = ({ onAddTransaction }) => {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             className="form-input"
-            autoFocus
           />
           <p style={{ fontSize: '12px', color: 'var(--beige-600)', marginTop: '6px' }}>
             Se deixar vazio, usa o nome da categoria
