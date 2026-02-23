@@ -77,9 +77,6 @@ const CategoryManager = () => {
       <div className="section-header">
         <div>
           <h2 className="section-title">Categorias</h2>
-          <p style={{ fontSize: '13px', color: 'var(--beige-700)', marginTop: '4px' }}>
-            Para despesas, receitas ou ambos
-          </p>
         </div>
         <button onClick={() => setIsModalOpen(true)} className="btn btn-primary">
           + Nova Categoria
