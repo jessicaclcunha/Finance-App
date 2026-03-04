@@ -63,20 +63,55 @@ const AnnualView = ({ allTransactions, selectedYear, compact = false }) => {
           Resumo de {selectedYear}
         </h2>
 
-        {/* Totais rápidos */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '16px' }}>
-          <div className="stat-compact">
-            <div className="stat-compact-label">Receitas</div>
-            <div className="stat-compact-value positive">+{yearTotals.income.toFixed(0)}€</div>
+        {/* Balance card - same style as monthly Dashboard */}
+        <div className="dashboard-container" style={{ marginBottom: '16px' }}>
+          <div
+            className="balance-card-main"
+            style={{
+              background: yearTotals.balance >= 0
+                ? 'linear-gradient(135deg, rgba(107, 155, 107, 0.15) 0%, white 100%)'
+                : 'linear-gradient(135deg, var(--burgundy-100) 0%, white 100%)',
+              borderColor: yearTotals.balance >= 0 ? 'rgba(107, 155, 107, 0.3)' : 'var(--burgundy-200)'
+            }}
+          >
+            <div className="balance-header">
+              <div className="balance-info">
+                <div
+                  className="balance-label-main"
+                  style={{ color: yearTotals.balance >= 0 ? 'var(--success)' : 'var(--burgundy-700)' }}
+                >
+                  Saldo Anual
+                </div>
+                <div className={`balance-amount-main ${yearTotals.balance >= 0 ? 'positive' : 'negative'}`}>
+                  {yearTotals.balance >= 0 ? '+' : ''}{yearTotals.balance.toFixed(2)}€
+                </div>
+              </div>
+            </div>
           </div>
-          <div className="stat-compact">
-            <div className="stat-compact-label">Despesas</div>
-            <div className="stat-compact-value negative">−{yearTotals.expenses.toFixed(0)}€</div>
-          </div>
-          <div className="stat-compact">
-            <div className="stat-compact-label">Saldo</div>
-            <div className={`stat-compact-value ${yearTotals.balance >= 0 ? 'positive' : 'negative'}`}>
-              {yearTotals.balance >= 0 ? '+' : ''}{yearTotals.balance.toFixed(0)}€
+
+          <div className="stats-compact">
+            <div className="stat-compact income">
+              <div className="stat-compact-header">
+                <span className="stat-compact-label">Receitas</span>
+              </div>
+              <div className="stat-compact-value positive">
+                +{yearTotals.income.toFixed(2)}€
+              </div>
+              <div className="stat-compact-detail">
+                {yearTotals.transactions} transações
+              </div>
+            </div>
+
+            <div className="stat-compact expense">
+              <div className="stat-compact-header">
+                <span className="stat-compact-label">Despesas</span>
+              </div>
+              <div className="stat-compact-value negative">
+                −{yearTotals.expenses.toFixed(2)}€
+              </div>
+              <div className="stat-compact-detail">
+                Média {averageMonthly.expenses.toFixed(0)}€/mês
+              </div>
             </div>
           </div>
         </div>

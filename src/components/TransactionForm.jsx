@@ -3,7 +3,8 @@ import { CategoriesContext } from "../contexts/CategoriesContext";
 
 const TransactionForm = ({ onAddTransaction }) => {
   const [description, setDescription] = useState("");
-  const [amount, setAmount] = useState("");
+  const [amount, setAmount] = useState("")
+;
   const [type, setType] = useState("expense");
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const { categories } = useContext(CategoriesContext);
@@ -144,7 +145,7 @@ const TransactionForm = ({ onAddTransaction }) => {
             <label className="form-label">Valor (€)</label>
             <input
               type="number"
-              placeholder="0.00"
+              placeholder="0,00"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               className="form-input"

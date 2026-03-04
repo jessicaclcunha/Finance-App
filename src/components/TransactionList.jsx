@@ -52,22 +52,22 @@ const TransactionList = ({ transactions, onAddTransaction, onDeleteTransaction, 
     <section className="section">
       <div className="section-header">
         <h2 className="section-title">Transações</h2>
-        <div className="filters">
+        <div className="view-mode-toggle" style={{ marginBottom: 0 }}>
           <button
             onClick={() => setFilter("all")}
-            className={filter === "all" ? "btn btn-primary btn-small" : "btn btn-secondary btn-small"}
+            className={filter === "all" ? "view-btn active" : "view-btn"}
           >
             Todas
           </button>
           <button
             onClick={() => setFilter("income")}
-            className={filter === "income" ? "btn btn-success btn-small" : "btn btn-secondary btn-small"}
+            className={filter === "income" ? "view-btn active" : "view-btn"}
           >
             Receitas
           </button>
           <button
             onClick={() => setFilter("expense")}
-            className={filter === "expense" ? "btn btn-warning btn-small" : "btn btn-secondary btn-small"}
+            className={filter === "expense" ? "view-btn active" : "view-btn"}
           >
             Despesas
           </button>
