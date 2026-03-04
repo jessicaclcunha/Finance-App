@@ -8,6 +8,7 @@ const TransactionList = ({ transactions, onAddTransaction, onDeleteTransaction, 
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("date");
   const [editingId, setEditingId] = useState(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
   const filteredTransactions = transactions.filter(t => {
     const matchesFilter = filter === "all" || t.type === filter;
@@ -52,26 +53,15 @@ const TransactionList = ({ transactions, onAddTransaction, onDeleteTransaction, 
     <section className="section">
       <div className="section-header">
         <h2 className="section-title">Transações</h2>
-        <div className="view-mode-toggle" style={{ marginBottom: 0 }}>
-          <button
-            onClick={() => setFilter("all")}
-            className={filter === "all" ? "view-btn active" : "view-btn"}
-          >
-            Todas
-          </button>
-          <button
-            onClick={() => setFilter("income")}
-            className={filter === "income" ? "view-btn active" : "view-btn"}
-          >
-            Receitas
-          </button>
-          <button
-            onClick={() => setFilter("expense")}
-            className={filter === "expense" ? "view-btn active" : "view-btn"}
-          >
-            Despesas
-          </button>
-        </div>
+        <button onClick={() => setIsFormOpen(true)} className="btn btn-primary">
+          + Nova Transação
+        </button>
+      </div>
+
+      <div className="view-mode-toggle" style={{ marginBottom: '16px' }}>
+        <button onClick={() => setFilter("all")} className={filter === "all" ? "view-btn active" : "view-btn"}>Todas</button>
+        <button onClick={() => setFilter("income")} className={filter === "income" ? "view-btn active" : "view-btn"}>Receitas</button>
+        <button onClick={() => setFilter("expense")} className={filter === "expense" ? "view-btn active" : "view-btn"}>Despesas</button>
       </div>
 
       {/* Pesquisa e ordenação */}
@@ -94,7 +84,11 @@ const TransactionList = ({ transactions, onAddTransaction, onDeleteTransaction, 
         </select>
       </div>
 
-      <TransactionForm onAddTransaction={onAddTransaction} />
+      <TransactionForm
+        onAddTransaction={(t) => { onAddTransaction(t); setIsFormOpen(false); }}
+        isOpen={isFormOpen}
+        onClose={() => setIsFormOpen(false)}
+      />
 
       {sortedTransactions.length === 0 ? (
         <div className="empty-state">

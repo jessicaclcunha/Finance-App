@@ -2465,24 +2465,21 @@ input[type="date"].form-input {
   background: white;
   border-radius: 8px;
   border: 1px solid var(--beige-300);
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
 }
 
 .annual-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 350px;
 }
 
 .annual-table th {
   background: var(--beige-100);
-  padding: 8px 10px;
+  padding: 8px 6px;
   text-align: left;
   font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   color: var(--burgundy-900);
   border-bottom: 2px solid var(--beige-300);
   white-space: nowrap;
@@ -2490,20 +2487,20 @@ input[type="date"].form-input {
 
 @media (min-width: 768px) {
   .annual-table th {
-    padding: 8px 14px;
+    padding: 10px 12px;
     font-size: 11px;
   }
 }
 
 .annual-table td {
-  padding: 7px 10px;
+  padding: 6px 6px;
   border-bottom: 1px solid var(--beige-200);
-  font-size: 13px;
+  font-size: 12px;
 }
 
 @media (min-width: 768px) {
   .annual-table td {
-    padding: 8px 14px;
+    padding: 8px 12px;
     font-size: 13px;
   }
 }
@@ -2549,14 +2546,14 @@ input[type="date"].form-input {
 }
 
 .annual-table tfoot td {
-  padding: 10px 10px;
-  font-size: 13px;
+  padding: 8px 6px;
+  font-size: 12px;
   border-bottom: none;
 }
 
 @media (min-width: 768px) {
   .annual-table tfoot td {
-    padding: 12px 14px;
+    padding: 12px 12px;
     font-size: 14px;
   }
 }
@@ -2804,12 +2801,12 @@ input[type="date"].form-input {
 @media (max-width: 480px) {
   .annual-table th,
   .annual-table td {
-    padding: 6px 5px;
-    font-size: 12px;
+    padding: 5px 4px;
+    font-size: 11px;
   }
   .annual-table tfoot td {
-    padding: 8px 5px;
-    font-size: 12px;
+    padding: 7px 4px;
+    font-size: 11px;
   }
 }
 
