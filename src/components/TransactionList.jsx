@@ -1,6 +1,100 @@
-import { useState, useContext } from "react";
+import { useState, useContext, useRef, useEffect } from "react";
 import TransactionForm from "./TransactionForm";
 import { CategoriesContext } from "../contexts/CategoriesContext";
+
+const SwipeableItem = ({ children, onRemove }) => {
+  const ref = useRef(null);
+  const startX = useRef(null);
+  const currentX = useRef(0);
+  const [offset, setOffset] = useState(0);
+  const [mounted, setMounted] = useState(false);
+  const [leaving, setLeaving] = useState(false);
+  const THRESHOLD = 80;
+
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
+
+  const triggerRemove = () => {
+    setLeaving(true);
+    setTimeout(onRemove, 300);
+  };
+
+  const onTouchStart = (e) => {
+    startX.current = e.touches[0].clientX;
+  };
+
+  const onTouchMove = (e) => {
+    if (startX.current === null) return;
+    const dx = e.touches[0].clientX - startX.current;
+    if (dx > 0) return;
+    currentX.current = dx;
+    setOffset(Math.max(dx, -120));
+  };
+
+  const onTouchEnd = () => {
+    if (Math.abs(currentX.current) >= THRESHOLD) {
+      setOffset(-window.innerWidth);
+      setTimeout(triggerRemove, 250);
+    } else {
+      setOffset(0);
+    }
+    startX.current = null;
+    currentX.current = 0;
+  };
+
+  const outerStyle = {
+    opacity: leaving ? 0 : mounted ? 1 : 0,
+    transform: leaving
+      ? "translateX(-40px) scaleY(0.85)"
+      : mounted ? "translateX(0)" : "translateX(24px)",
+    maxHeight: leaving ? "0px" : "160px",
+    overflow: "hidden",
+    transition: leaving
+      ? "opacity 0.28s ease, transform 0.28s ease, max-height 0.3s ease"
+      : "opacity 0.25s ease, transform 0.25s ease",
+    marginBottom: leaving ? "0px" : "8px",
+  };
+
+  const innerStyle = {
+    transform: `translateX(${offset}px)`,
+    transition: startX.current ? "none" : "transform 0.3s cubic-bezier(0.34, 1.2, 0.64, 1)",
+    position: "relative",
+    zIndex: 1,
+  };
+
+  const swipeBackground = (
+    <div style={{
+      position: "absolute",
+      inset: 0,
+      background: "var(--error)",
+      borderRadius: "8px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "flex-end",
+      paddingRight: "20px",
+      opacity: Math.min(Math.abs(offset) / THRESHOLD, 1),
+    }}>
+      <span style={{ color: "white", fontSize: "20px" }}>🗑</span>
+    </div>
+  );
+
+  return (
+    <div style={{ ...outerStyle, position: "relative" }}>
+      {swipeBackground}
+      <div
+        ref={ref}
+        style={innerStyle}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+      >
+        {children(triggerRemove)}
+      </div>
+    </div>
+  );
+};
 
 const TransactionList = ({ transactions, onAddTransaction, onDeleteTransaction, onEditTransaction }) => {
   const { categories } = useContext(CategoriesContext);
@@ -23,31 +117,22 @@ const TransactionList = ({ transactions, onAddTransaction, onDeleteTransaction, 
     return 0;
   });
 
-  const getCategoryInfo = (categoryId) => {
-    return categories.find(cat => cat.id === categoryId) || { 
-      name: "Sem categoria", 
-      icon: "📁", 
-      color: "var(--beige-700)" 
+  const getCategoryInfo = (categoryId) =>
+    categories.find(cat => cat.id === categoryId) || {
+      name: "Sem categoria", icon: "📁", color: "var(--beige-700)",
     };
-  };
 
   const formatDate = (timestamp) => {
     const date = new Date(timestamp);
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
-    
-    if (date.toDateString() === today.toDateString()) {
-      return "Hoje";
-    } else if (date.toDateString() === yesterday.toDateString()) {
-      return "Ontem";
-    }
-    
-    return date.toLocaleDateString('pt-PT', { 
-      day: 'numeric', 
-      month: 'short'
-    });
+    if (date.toDateString() === today.toDateString()) return "Hoje";
+    if (date.toDateString() === yesterday.toDateString()) return "Ontem";
+    return date.toLocaleDateString("pt-PT", { day: "numeric", month: "short" });
   };
+
+  const editingTransaction = transactions.find(t => t.id === editingId);
 
   return (
     <section className="section">
@@ -58,26 +143,20 @@ const TransactionList = ({ transactions, onAddTransaction, onDeleteTransaction, 
         </button>
       </div>
 
-      <div className="view-mode-toggle" style={{ marginBottom: '16px' }}>
-        <button onClick={() => setFilter("all")} className={filter === "all" ? "view-btn active" : "view-btn"}>Todas</button>
-        <button onClick={() => setFilter("income")} className={filter === "income" ? "view-btn active" : "view-btn"}>Receitas</button>
-        <button onClick={() => setFilter("expense")} className={filter === "expense" ? "view-btn active" : "view-btn"}>Despesas</button>
+      <div className="view-mode-toggle" style={{ marginBottom: "16px" }}>
+        {["all", "income", "expense"].map(f => (
+          <button key={f} onClick={() => setFilter(f)}
+            className={filter === f ? "view-btn active" : "view-btn"}>
+            {f === "all" ? "Todas" : f === "income" ? "Receitas" : "Despesas"}
+          </button>
+        ))}
       </div>
 
-      {/* Pesquisa e ordenação */}
       <div className="transaction-controls">
-        <input
-          type="text"
-          placeholder="🔍 Pesquisar transações..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="search-input"
-        />
-        <select
-          value={sortBy}
-          onChange={(e) => setSortBy(e.target.value)}
-          className="sort-select"
-        >
+        <input type="text" placeholder="🔍 Pesquisar transações..."
+          value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
+          className="search-input" />
+        <select value={sortBy} onChange={e => setSortBy(e.target.value)} className="sort-select">
           <option value="date">Ordenar por data</option>
           <option value="amount">Ordenar por valor</option>
           <option value="description">Ordenar por nome</option>
@@ -85,9 +164,9 @@ const TransactionList = ({ transactions, onAddTransaction, onDeleteTransaction, 
       </div>
 
       <TransactionForm
-        onAddTransaction={(t) => { onAddTransaction(t); setIsFormOpen(false); }}
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
+        onAddTransaction={t => { onAddTransaction(t); setIsFormOpen(false); }}
       />
 
       {sortedTransactions.length === 0 ? (
@@ -95,196 +174,82 @@ const TransactionList = ({ transactions, onAddTransaction, onDeleteTransaction, 
           <div className="empty-icon">📋</div>
           <div className="empty-title">Nenhuma transação</div>
           <div className="empty-description">
-            {searchTerm 
-              ? "Nenhuma transação encontrada com esse termo"
-              : filter === "all" 
-              ? "Adicione sua primeira transação acima"
+            {searchTerm ? "Nenhuma transação encontrada com esse termo"
+              : filter === "all" ? "Adicione a sua primeira transação acima"
               : "Tente alterar o filtro"}
           </div>
         </div>
       ) : (
         <div className="transaction-list">
-          {sortedTransactions.map((transaction) => {
-            const category = transaction.type === "expense" 
-              ? getCategoryInfo(transaction.categoryId)
-              : null;
-            
-            return (
-              <div key={transaction.id} className="transaction-item">
-                <div 
-                  className="transaction-icon"
-                  style={{
-                    background: transaction.type === "income" 
-                      ? 'rgba(107, 155, 107, 0.15)' 
-                      : category?.color ? `${category.color}20` : 'rgba(212, 165, 116, 0.15)'
-                  }}
-                >
-                  {transaction.type === "income" ? '💰' : (category ? category.icon : '📁')}
-                </div>
-                
-                <div className="transaction-info">
-                  <div className="transaction-description">
-                    {transaction.description}
-                  </div>
-                  <div className="transaction-meta">
-                    <span>{formatDate(transaction.date)}</span>
-                    {transaction.type === "expense" && category && (
-                      <>
-                        <span>•</span>
-                        <span>{category.name}</span>
-                      </>
-                    )}
-                    {transaction.type === "income" && (
-                      <>
-                        <span>•</span>
-                        <span>Receita</span>
-                      </>
-                    )}
-                  </div>
-                </div>
-                
-                <div 
-                  className="transaction-amount"
-                  style={{
-                    color: transaction.type === "income" ? 'var(--success)' : 'var(--warning)'
-                  }}
-                >
-                  {transaction.type === "income" ? "+" : "−"}{transaction.amount.toFixed(2)}€
-                </div>
+          {sortedTransactions.map(transaction => {
+            const category = transaction.type === "expense"
+              ? getCategoryInfo(transaction.categoryId) : null;
 
-                <div className="transaction-actions">
-                  <button
-                    onClick={() => setEditingId(transaction.id)}
-                    className="transaction-edit"
-                    title="Editar"
-                  >
-                    ✎
-                  </button>
-                  <button
-                    onClick={() => onDeleteTransaction(transaction.id)}
-                    className="transaction-delete"
-                    title="Eliminar"
-                  >
-                    ×
-                  </button>
-                </div>
-              </div>
+            return (
+              <SwipeableItem key={transaction.id}
+                onRemove={() => onDeleteTransaction(transaction.id)}>
+                {(triggerRemove) => (
+                  <div className="transaction-item" style={{
+                    borderLeft: transaction.isRecurring
+                      ? "3px solid var(--beige-400)" : undefined,
+                  }}>
+                    <div className="transaction-icon" style={{
+                      background: transaction.type === "income"
+                        ? "rgba(107, 155, 107, 0.15)"
+                        : category?.color ? `${category.color}20`
+                        : "rgba(212, 165, 116, 0.15)",
+                    }}>
+                      {transaction.isRecurring ? "🔄"
+                        : transaction.type === "income" ? "💰"
+                        : category ? category.icon : "📁"}
+                    </div>
+
+                    <div className="transaction-info">
+                      <div className="transaction-description">{transaction.description}</div>
+                      <div className="transaction-meta">
+                        <span>{formatDate(transaction.date)}</span>
+                        {transaction.type === "expense" && category && (
+                          <><span>•</span><span>{category.name}</span></>
+                        )}
+                        {transaction.type === "income" && (
+                          <><span>•</span><span>Receita</span></>
+                        )}
+                        {transaction.isRecurring && (
+                          <><span>•</span>
+                          <span style={{ color: "var(--beige-600)", fontSize: "11px" }}>recorrente</span></>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="transaction-amount" style={{
+                      color: transaction.type === "income" ? "var(--success)" : "var(--warning)",
+                    }}>
+                      {transaction.type === "income" ? "+" : "−"}{transaction.amount.toFixed(2)}€
+                    </div>
+
+                    <div className="transaction-actions">
+                      <button onClick={() => setEditingId(transaction.id)}
+                        className="transaction-edit" title="Editar">✎</button>
+                      <button onClick={triggerRemove}
+                        className="transaction-delete" title="Eliminar">×</button>
+                    </div>
+                  </div>
+                )}
+              </SwipeableItem>
             );
           })}
         </div>
       )}
 
-      {/* Modal de edição */}
-      {editingId && (
-        <TransactionEditModal
-          transaction={transactions.find(t => t.id === editingId)}
-          categories={categories}
-          onSave={(updated) => {
-            onEditTransaction(editingId, updated);
-            setEditingId(null);
-          }}
-          onCancel={() => setEditingId(null)}
+      {editingTransaction && (
+        <TransactionForm
+          isOpen={Boolean(editingId)}
+          onClose={() => setEditingId(null)}
+          transaction={editingTransaction}
+          onSave={updated => { onEditTransaction(editingId, updated); setEditingId(null); }}
         />
       )}
     </section>
-  );
-};
-
-const TransactionEditModal = ({ transaction, categories, onSave, onCancel }) => {
-  const [formData, setFormData] = useState({
-    description: transaction.description,
-    amount: transaction.amount,
-    date: new Date(transaction.date).toISOString().split('T')[0],
-    type: transaction.type,
-    categoryId: transaction.categoryId || categories[0]?.id
-  });
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onSave({
-      ...formData,
-      amount: parseFloat(formData.amount),
-      date: new Date(formData.date).getTime(),
-      categoryId: formData.type === "expense" ? parseInt(formData.categoryId) : null
-    });
-  };
-
-  return (
-    <div className="modal-overlay" onClick={(e) => {
-      if (e.target === e.currentTarget) onCancel();
-    }}>
-      <div className="modal-content">
-        <div className="modal-header">
-          <h3 className="modal-title">Editar Transação</h3>
-          <button onClick={onCancel} className="modal-close">×</button>
-        </div>
-
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label className="form-label">Descrição</label>
-            <input
-              type="text"
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="form-input"
-              required
-            />
-          </div>
-
-          <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">Valor (€)</label>
-              <input
-                type="number"
-                value={formData.amount}
-                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                className="form-input"
-                step="0.01"
-                min="0.01"
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">Data</label>
-              <input
-                type="date"
-                value={formData.date}
-                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                className="form-input"
-                required
-              />
-            </div>
-          </div>
-
-          {formData.type === "expense" && categories.length > 0 && (
-            <div className="form-group">
-              <label className="form-label">Categoria</label>
-              <select
-                value={formData.categoryId}
-                onChange={(e) => setFormData({ ...formData, categoryId: parseInt(e.target.value) })}
-                className="form-select"
-              >
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.icon} {cat.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>
-              Guardar
-            </button>
-            <button type="button" onClick={onCancel} className="btn btn-secondary" style={{ flex: 1 }}>
-              Cancelar
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
   );
 };
 
