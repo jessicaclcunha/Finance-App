@@ -9,10 +9,9 @@ import SavingsGoals from "./components/SavingsGoals";
 import ExportData from "./components/ExportData";
 import RecurringTransactions from "./components/RecurringTransactions";
 import BudgetAlerts from "./components/BudgetAlerts";
-import GamificationPanel from "./components/GamificationPanel";
 import AnalysisView from "./components/AnalysisView";
+import AnnualView from "./components/AnnualView";
 import useRecurringInjector from "./hooks/useRecurringInjector";
-import useGamification from "./hooks/useGamification";
 import { CategoriesContext, CategoriesProvider } from "./contexts/CategoriesContext";
 
 const AppWrapper = () => (
@@ -22,10 +21,6 @@ const AppWrapper = () => (
 function App() {
   const [transactions, setTransactions] = useState(() => {
     const saved = localStorage.getItem("transactions");
-    return saved ? JSON.parse(saved) : [];
-  });
-  const [goals] = useState(() => {
-    const saved = localStorage.getItem("savingsGoals");
     return saved ? JSON.parse(saved) : [];
   });
   const [view, setView] = useState("dashboard");
@@ -41,15 +36,13 @@ function App() {
   }, [transactions]);
 
   const { categories } = useContext(CategoriesContext);
-  const { streak, achievements, score, breakdown, challenges } =
-    useGamification(transactions, categories, goals, selectedDate);
 
-  const handleAddTransaction    = (t)      => setTransactions(prev => [...prev, t]);
-  const handleDeleteTransaction = (id)     => {
+  const handleAddTransaction    = (t)     => setTransactions(prev => [...prev, t]);
+  const handleDeleteTransaction = (id)    => {
     if (window.confirm("Eliminar esta transação?"))
       setTransactions(prev => prev.filter(t => t.id !== id));
   };
-  const handleEditTransaction   = (id, d)  =>
+  const handleEditTransaction   = (id, d) =>
     setTransactions(prev => prev.map(t => t.id === id ? { ...t, ...d } : t));
 
   const filteredTransactions = transactions.filter(t => {
@@ -69,15 +62,15 @@ function App() {
             {viewMode === "month" ? (
               <>
                 <Dashboard transactions={filteredTransactions} />
-                <GamificationPanel score={score} breakdown={breakdown}
-                  streak={streak} achievements={achievements} challenges={challenges} />
                 <BudgetAlerts transactions={filteredTransactions} categories={categories} />
                 <MonthInsights transactions={filteredTransactions} selectedDate={selectedDate} />
               </>
             ) : (
-              <AnalysisView transactions={transactions} categories={categories}
-                selectedDate={selectedDate} onDateChange={setSelectedDate}
-                viewMode={viewMode} onViewModeChange={setViewMode} />
+              <AnnualView
+                allTransactions={transactions}
+                selectedYear={selectedDate.year}
+                compact={true}
+              />
             )}
           </>
         )}
