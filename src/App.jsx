@@ -14,6 +14,7 @@ import AnnualView from "./components/AnnualView";
 import Auth from "./components/Auth";
 import useRecurringInjector from "./hooks/useRecurringInjector";
 import { CategoriesContext, CategoriesProvider } from "./contexts/CategoriesContext";
+import Account from "./components/Account";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { supabase } from "./lib/supabaseClient";
 import { fromDbTransaction, toDbTransaction } from "./lib/mappers";
@@ -116,7 +117,7 @@ function App() {
 
   return (
     <div className="app-container">
-      <Header view={view} setView={setView} onSignOut={signOut} userEmail={user?.email} />
+      <Header view={view} setView={setView} />
       <div className="content-wrapper">
 
         {view === "dashboard" && (
@@ -158,6 +159,17 @@ function App() {
             <CategoryManager />
             <RecurringTransactions />
           </>
+        )}
+
+        {view === "account" && (
+          <Account
+            user={user}
+            onSignOut={signOut}
+            stats={{
+              transactionsCount: transactions.length,
+              categoriesCount: categories.length,
+            }}
+          />
         )}
       </div>
     </div>

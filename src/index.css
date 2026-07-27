@@ -92,9 +92,21 @@ body {
   position: relative;
 }
 
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-text-block {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
 .logo-section h1 {
   font-family: var(--font-serif);
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 500;
   color: var(--beige-100);
   margin: 0;
@@ -102,13 +114,13 @@ body {
 
 @media (min-width: 640px) {
   .logo-section h1 {
-    font-size: 28px;
+    font-size: 25px;
   }
 }
 
 @media (min-width: 768px) {
   .logo-section h1 {
-    font-size: 32px;
+    font-size: 28px;
   }
 }
 
@@ -154,12 +166,6 @@ body {
 .logo-icon {
   font-size: 22px;
   line-height: 1;
-}
-
-.logo-text-group {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
 }
 
 .logo-edit-hint {
@@ -390,11 +396,19 @@ body {
   }
 }
 
+/* separador subtil antes de "Minha Conta" */
+.nav-divider {
+  height: 1px;
+  background: var(--burgundy-700);
+  margin: 8px 24px;
+}
+
 /* DESKTOP: Menu horizontal */
 @media (min-width: 768px) {
   .main-nav {
     display: flex;
     flex-direction: row;
+    align-items: center;
     gap: 4px;
   }
 
@@ -431,6 +445,12 @@ body {
     color: var(--burgundy-900);
     background: var(--beige-300);
     font-weight: 600;
+  }
+
+  .nav-divider {
+    width: 1px;
+    height: 20px;
+    margin: 0 4px;
   }
 }
 
@@ -2853,7 +2873,7 @@ input[type="date"].form-input {
   border: 1px solid var(--beige-300);
   border-radius: 14px;
   box-shadow: var(--shadow-lg);
-  padding: 0 32px 32px;
+  padding: 32px 32px 32px;
   max-width: 500px;
   width: 100%;
   animation: auth-rise 0.5s cubic-bezier(0.22, 1, 0.36, 1);
@@ -2868,8 +2888,40 @@ input[type="date"].form-input {
   .auth-card { animation: none; }
 }
 
+.auth-logo-mark {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.auth-logo-mark .auth-mark {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+}
+
+.auth-wordmark {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--burgundy-900);
+  letter-spacing: 0.01em;
+  line-height: 1;
+  margin-top: 4px;
+}
+
+.auth-tagline {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--beige-600);
+  font-weight: 600;
+}
+
 .auth-sparkline {
-  margin: 14px auto 6px;
+  margin: 10px auto 4px;
   display: block;
 }
 
@@ -2902,7 +2954,7 @@ input[type="date"].form-input {
   text-align: center;
   font-size: 13px;
   color: var(--beige-700);
-  margin-bottom: 22px;
+  margin-bottom: 20px;
 }
 
 .auth-divider {
@@ -2987,59 +3039,7 @@ input[type="date"].form-input {
   line-height: 1.5;
 }
 
-/* ================================================================
-   HEADER — adicionar / substituir estas regras em src/index.css
-   ================================================================ */
-
-.logo-section {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.logo-text-block {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.1;
-}
-
-/* substitui a regra .logo-section h1 existente */
-.logo-section h1 {
-  font-family: var(--font-serif);
-  font-size: 22px;
-  font-weight: 500;
-  color: var(--beige-100);
-  margin: 0;
-}
-
-@media (min-width: 640px) {
-  .logo-section h1 { font-size: 25px; }
-}
-
-@media (min-width: 768px) {
-  .logo-section h1 { font-size: 28px; }
-}
-
-/* separador subtil antes de "Minha Conta" */
-.nav-divider {
-  height: 1px;
-  background: var(--burgundy-700);
-  margin: 8px 24px;
-}
-
-@media (min-width: 768px) {
-  .nav-divider {
-    width: 1px;
-    height: 20px;
-    margin: 0 4px;
-  }
-}
-
-
-/* ================================================================
-   MINHA CONTA — nova página
-   ================================================================ */
-
+/* ===== MINHA CONTA ===== */
 .account-profile-card {
   display: flex;
   align-items: center;
@@ -3080,8 +3080,7 @@ input[type="date"].form-input {
   margin-top: 2px;
 }
 
-
-/* ── Popover de confirmação de logout (agora usado em Account.jsx) ── */
+/* Popover de confirmação de logout (usado em Account.jsx) */
 .signout-overlay {
   position: fixed;
   inset: 0;
@@ -3125,115 +3124,4 @@ input[type="date"].form-input {
 .signout-actions {
   display: flex;
   gap: 10px;
-}
-
-
-/* ================================================================
-   AUTH PAGE — corrigir proporções (o logo de 200px estava enorme
-   face ao resto do cartão). Substitui as regras homónimas em
-   src/index.css.
-   ================================================================ */
-
-.auth-card {
-  padding: 32px 32px 32px;
-}
-
-.auth-logo-mark {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 4px;
-}
-
-/* substitui a regra .auth-logo-mark .auth-mark existente (era 200x200) */
-.auth-logo-mark .auth-mark {
-  width: 72px;
-  height: 72px;
-  object-fit: contain;
-}
-
-.auth-wordmark {
-  font-family: var(--font-serif);
-  font-size: 22px;
-  font-weight: 500;
-  color: var(--burgundy-900);
-  letter-spacing: 0.01em;
-  line-height: 1;
-  margin-top: 4px;
-}
-
-.auth-tagline {
-  font-size: 9px;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: var(--beige-600);
-  font-weight: 600;
-}
-
-.auth-sparkline {
-  margin: 10px auto 4px;
-  display: block;
-}
-
-.auth-heading {
-  text-align: center;
-  font-size: 13px;
-  color: var(--beige-700);
-  margin-bottom: 20px;
-}
-
-/* ================================================================
-   AUTH PAGE — corrigir proporções (o logo de 200px estava enorme
-   face ao resto do cartão). Substitui as regras homónimas em
-   src/index.css.
-   ================================================================ */
-
-.auth-card {
-  padding: 32px 32px 32px;
-}
-
-.auth-logo-mark {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 4px;
-}
-
-/* substitui a regra .auth-logo-mark .auth-mark existente (era 200x200) */
-.auth-logo-mark .auth-mark {
-  width: 72px;
-  height: 72px;
-  object-fit: contain;
-}
-
-.auth-wordmark {
-  font-family: var(--font-serif);
-  font-size: 22px;
-  font-weight: 500;
-  color: var(--burgundy-900);
-  letter-spacing: 0.01em;
-  line-height: 1;
-  margin-top: 4px;
-}
-
-.auth-tagline {
-  font-size: 9px;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: var(--beige-600);
-  font-weight: 600;
-}
-
-.auth-sparkline {
-  margin: 10px auto 4px;
-  display: block;
-}
-
-.auth-heading {
-  text-align: center;
-  font-size: 13px;
-  color: var(--beige-700);
-  margin-bottom: 20px;
 }
