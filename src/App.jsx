@@ -11,18 +11,43 @@ import RecurringTransactions from "./components/RecurringTransactions";
 import BudgetAlerts from "./components/BudgetAlerts";
 import AnalysisView from "./components/AnalysisView";
 import AnnualView from "./components/AnnualView";
+import Auth from "./components/Auth";
 import useRecurringInjector from "./hooks/useRecurringInjector";
 import { CategoriesContext, CategoriesProvider } from "./contexts/CategoriesContext";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { supabase } from "./lib/supabaseClient";
+import { fromDbTransaction, toDbTransaction } from "./lib/mappers";
 
 const AppWrapper = () => (
-  <CategoriesProvider><App /></CategoriesProvider>
+  <AuthProvider>
+    <AuthGate />
+  </AuthProvider>
 );
 
+const AuthGate = () => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--beige-700)" }}>
+        A carregar...
+      </div>
+    );
+  }
+
+  if (!user) return <Auth />;
+
+  return (
+    <CategoriesProvider>
+      <App />
+    </CategoriesProvider>
+  );
+};
+
 function App() {
-  const [transactions, setTransactions] = useState(() => {
-    const saved = localStorage.getItem("transactions");
-    return saved ? JSON.parse(saved) : [];
-  });
+  const { user, signOut } = useAuth();
+  const [transactions, setTransactions] = useState([]);
+  const [loadingTx, setLoadingTx] = useState(true);
   const [view, setView] = useState("dashboard");
   const [viewMode, setViewMode] = useState("month");
   const [selectedDate, setSelectedDate] = useState({
@@ -32,27 +57,66 @@ function App() {
   useRecurringInjector(transactions, setTransactions);
 
   useEffect(() => {
-    localStorage.setItem("transactions", JSON.stringify(transactions));
-  }, [transactions]);
+    if (!user) return;
+    setLoadingTx(true);
+    supabase.from("transactions").select("*").eq("user_id", user.id)
+      .then(({ data, error }) => {
+        if (!error) setTransactions((data || []).map(fromDbTransaction));
+        setLoadingTx(false);
+      });
+  }, [user]);
 
   const { categories } = useContext(CategoriesContext);
 
-  const handleAddTransaction    = (t)     => setTransactions(prev => [...prev, t]);
-  const handleDeleteTransaction = (id)    => {
-    if (window.confirm("Eliminar esta transação?"))
-      setTransactions(prev => prev.filter(t => t.id !== id));
+  const handleAddTransaction = async (t) => {
+    const { data, error } = await supabase
+      .from("transactions")
+      .insert(toDbTransaction(t, user.id))
+      .select()
+      .single();
+    if (error) { console.error(error); return; }
+    setTransactions(prev => [...prev, fromDbTransaction(data)]);
   };
-  const handleEditTransaction   = (id, d) =>
+
+  const handleDeleteTransaction = async (id) => {
+    if (!window.confirm("Eliminar esta transação?")) return;
+    const { error } = await supabase.from("transactions").delete().eq("id", id).eq("user_id", user.id);
+    if (error) { console.error(error); return; }
+    setTransactions(prev => prev.filter(t => t.id !== id));
+  };
+
+  const handleEditTransaction = async (id, d) => {
+    const { error } = await supabase
+      .from("transactions")
+      .update({
+        description: d.description,
+        amount: d.amount,
+        type: d.type,
+        category_id: d.categoryId ?? null,
+        date: new Date(d.date).toISOString(),
+      })
+      .eq("id", id)
+      .eq("user_id", user.id);
+    if (error) { console.error(error); return; }
     setTransactions(prev => prev.map(t => t.id === id ? { ...t, ...d } : t));
+  };
 
   const filteredTransactions = transactions.filter(t => {
     const d = new Date(t.date || Date.now());
     return d.getMonth() === selectedDate.month && d.getFullYear() === selectedDate.year;
   });
 
+  if (loadingTx) {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--beige-700)" }}>
+        A carregar os teus dados...
+      </div>
+    );
+  }
+
   return (
     <div className="app-container">
-      <Header view={view} setView={setView} />
+      <Header view={view} setView={setView} onSignOut={signOut} userEmail={user?.email} />
       <div className="content-wrapper">
 
         {view === "dashboard" && (
@@ -66,11 +130,7 @@ function App() {
                 <MonthInsights transactions={filteredTransactions} selectedDate={selectedDate} />
               </>
             ) : (
-              <AnnualView
-                allTransactions={transactions}
-                selectedYear={selectedDate.year}
-                compact={true}
-              />
+              <AnnualView allTransactions={transactions} selectedYear={selectedDate.year} compact={true} />
             )}
           </>
         )}

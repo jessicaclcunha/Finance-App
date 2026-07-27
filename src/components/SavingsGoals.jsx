@@ -1,4 +1,7 @@
 import { useState, useEffect, useRef } from "react";
+import { supabase } from "../lib/supabaseClient";
+import { useAuth } from "../contexts/AuthContext";
+import { fromDbGoal, toDbGoal } from "../lib/mappers";
 
 const AnimatedProgressBar = ({ progress, isCompleted, isOverdue }) => {
   const [displayed, setDisplayed] = useState(0);
@@ -50,7 +53,6 @@ const AnimatedProgressBar = ({ progress, isCompleted, isOverdue }) => {
 
   // largura visual: máx 100% na barra, mas mostramos overflow com efeito
   const visualWidth = Math.min(displayed, 100);
-  const overflowPct = Math.max(0, displayed - 100);
 
   return (
     <div className="goal-progress-wrapper" style={{ position: "relative" }}>
@@ -187,48 +189,103 @@ const GoalEditModal = ({ goal, onSave, onCancel }) => {
 
 /* ── Componente principal ── */
 const SavingsGoals = () => {
-  const [goals, setGoals] = useState(() => {
-    const saved = localStorage.getItem("savingsGoals");
-    return saved ? JSON.parse(saved) : [];
-  });
+  const { user } = useAuth();
+  const [goals, setGoals] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [isAddingGoal, setIsAddingGoal] = useState(false);
   const [editingGoalId, setEditingGoalId] = useState(null);
   const [celebratingId, setCelebratingId] = useState(null);
   const [newGoal, setNewGoal] = useState({ name: "", target: "", deadline: "" });
 
-  const saveGoals = (updated) => {
-    setGoals(updated);
-    localStorage.setItem("savingsGoals", JSON.stringify(updated));
-  };
+  useEffect(() => {
+    if (!user) { setGoals([]); return; }
 
-  const handleAddGoal = (e) => {
+    setLoading(true);
+    supabase
+      .from("savings_goals")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at")
+      .then(({ data, error }) => {
+        if (error) console.error(error);
+        else setGoals((data || []).map(fromDbGoal));
+        setLoading(false);
+      });
+  }, [user]);
+
+  const handleAddGoal = async (e) => {
     e.preventDefault();
-    saveGoals([...goals, {
-      id: Date.now(), name: newGoal.name,
+
+    const payload = {
+      name: newGoal.name,
       target: parseFloat(newGoal.target),
-      deadline: newGoal.deadline, saved: 0, createdAt: Date.now(),
-    }]);
+      deadline: newGoal.deadline,
+      saved: 0,
+    };
+
+    const { data, error } = await supabase
+      .from("savings_goals")
+      .insert(toDbGoal(payload, user.id))
+      .select()
+      .single();
+
+    if (error) { console.error(error); return; }
+
+    setGoals(prev => [...prev, fromDbGoal(data)]);
     setNewGoal({ name: "", target: "", deadline: "" });
     setIsAddingGoal(false);
   };
 
-  const handleEditGoal = (id, updated) => {
-    saveGoals(goals.map(g => g.id === id ? { ...g, ...updated } : g));
+  const handleEditGoal = async (id, updated) => {
+    const { error } = await supabase
+      .from("savings_goals")
+      .update({
+        name: updated.name,
+        target: updated.target,
+        deadline: updated.deadline,
+        saved: updated.saved,
+      })
+      .eq("id", id)
+      .eq("user_id", user.id);
+
+    if (error) { console.error(error); return; }
+
+    setGoals(prev => prev.map(g => g.id === id ? { ...g, ...updated } : g));
     setEditingGoalId(null);
   };
 
-  const handleDeleteGoal = (id) => {
-    if (window.confirm("Eliminar esta meta?"))
-      saveGoals(goals.filter(g => g.id !== id));
+  const handleDeleteGoal = async (id) => {
+    if (!window.confirm("Eliminar esta meta?")) return;
+
+    const { error } = await supabase
+      .from("savings_goals")
+      .delete()
+      .eq("id", id)
+      .eq("user_id", user.id);
+
+    if (error) { console.error(error); return; }
+
+    setGoals(prev => prev.filter(g => g.id !== id));
   };
 
-  const handleUpdateSaved = (id, amount) => {
+  const handleUpdateSaved = async (id, amount) => {
     const goal = goals.find(g => g.id === id);
     if (!goal) return;
+
     const newSaved = Math.max(0, goal.saved + amount);
     const wasComplete = goal.saved >= goal.target;
     const nowComplete = newSaved >= goal.target;
-    saveGoals(goals.map(g => g.id === id ? { ...g, saved: newSaved } : g));
+
+    const { error } = await supabase
+      .from("savings_goals")
+      .update({ saved: newSaved })
+      .eq("id", id)
+      .eq("user_id", user.id);
+
+    if (error) { console.error(error); return; }
+
+    setGoals(prev => prev.map(g => g.id === id ? { ...g, saved: newSaved } : g));
+
     if (!wasComplete && nowComplete) {
       setCelebratingId(id);
       setTimeout(() => setCelebratingId(null), 3000);
@@ -245,6 +302,17 @@ const SavingsGoals = () => {
   const totalSaved  = goals.reduce((s, g) => s + g.saved,  0);
   const completedCount = goals.filter(g => g.saved >= g.target).length;
   const editingGoal = goals.find(g => g.id === editingGoalId);
+
+  if (loading) {
+    return (
+      <section className="section">
+        <h2 className="section-title" style={{ marginBottom: "16px" }}>Metas de Poupança</h2>
+        <div className="empty-state">
+          <div className="empty-description">A carregar metas...</div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="section">
