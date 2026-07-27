@@ -59,49 +59,91 @@ const ExportData = ({ transactions, categories }) => {
   };
 
   const restoreBackup = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+  const file = e.target.files[0];
+  if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      try {
-        const backup = JSON.parse(event.target.result);
-        if (!window.confirm("Isto vai adicionar os dados do backup à tua conta atual. Continuar?")) return;
+  const reader = new FileReader();
+  reader.onload = async (event) => {
+    try {
+      const backup = JSON.parse(event.target.result);
+      if (!window.confirm("Isto vai adicionar os dados do backup à tua conta atual. Continuar?")) return;
 
-        if (backup.categories?.length) {
-          await supabase.from("categories").insert(
-            backup.categories.map(({ id, ...c }) => ({ ...c, user_id: user.id }))
-          );
-        }
-        if (backup.transactions?.length) {
-          await supabase.from("transactions").insert(
-            backup.transactions.map(({ id, categoryId, isRecurring, recurringKey, ...t }) => ({
-              ...t, category_id: categoryId ?? null, is_recurring: isRecurring ?? false,
-              recurring_key: recurringKey ?? null, date: new Date(t.date).toISOString(), user_id: user.id,
-            }))
-          );
-        }
-        if (backup.savingsGoals?.length) {
-          await supabase.from("savings_goals").insert(
-            backup.savingsGoals.map(({ id, ...g }) => ({ ...g, user_id: user.id }))
-          );
-        }
-        if (backup.recurringTransactions?.length) {
-          await supabase.from("recurring_transactions").insert(
-            backup.recurringTransactions.map(({ id, ...r }) => ({ ...r, user_id: user.id }))
-          );
+      const categoryIdMap = {};
+
+      if (backup.categories?.length) {
+        const { data: insertedCategories, error: catError } = await supabase
+          .from("categories")
+          .insert(backup.categories.map(({ id, ...c }) => ({ ...c, user_id: user.id })))
+          .select();
+
+        if (catError) {
+          console.error(catError);
+          alert("Erro ao restaurar categorias.");
+          return;
         }
 
-        alert("Backup restaurado com sucesso! A página será recarregada.");
-        window.location.reload();
-      } catch (err) {
-        console.error(err);
-        alert("Erro ao restaurar backup. Ficheiro inválido.");
+        backup.categories.forEach(oldCat => {
+          const match = insertedCategories.find(
+            newCat => newCat.name === oldCat.name && newCat.type === (oldCat.type || "expense")
+          );
+          if (match) categoryIdMap[oldCat.id] = match.id;
+        });
       }
-    };
-    reader.readAsText(file);
-  };
 
+      if (backup.transactions?.length) {
+        const { error: txError } = await supabase.from("transactions").insert(
+          backup.transactions.map(({ id, categoryId, isRecurring, recurringKey, ...t }) => ({
+            ...t,
+            category_id: categoryId != null ? (categoryIdMap[categoryId] ?? null) : null,
+            is_recurring: isRecurring ?? false,
+            recurring_key: recurringKey ?? null,
+            date: new Date(t.date).toISOString(),
+            user_id: user.id,
+          }))
+        );
+        if (txError) {
+          console.error(txError);
+          alert("Erro ao restaurar transações.");
+          return;
+        }
+      }
+
+      if (backup.savingsGoals?.length) {
+        const { error: goalsError } = await supabase.from("savings_goals").insert(
+          backup.savingsGoals.map(({ id, createdAt, ...g }) => ({ ...g, user_id: user.id }))
+        );
+        if (goalsError) {
+          console.error(goalsError);
+          alert("Erro ao restaurar metas.");
+          return;
+        }
+      }
+
+      if (backup.recurringTransactions?.length) {
+        const { error: recError } = await supabase.from("recurring_transactions").insert(
+          backup.recurringTransactions.map(({ id, categoryId, dayOfMonth, ...r }) => ({
+            ...r,
+            category_id: categoryId != null ? (categoryIdMap[categoryId] ?? null) : null,
+            day_of_month: dayOfMonth,
+            user_id: user.id,
+          }))
+        );
+        if (recError) {
+          console.error(recError);
+          alert("Erro ao restaurar transações recorrentes.");
+          return;
+        }
+      }
+
+      alert("Backup restaurado com sucesso! A página será recarregada.");
+      window.location.reload();
+    } catch (err) {
+      console.error(err);
+      alert("Erro ao restaurar backup. Ficheiro inválido.");
+    }
+  };
+  reader.readAsText(file);
+};
   return (
     <div className="export-section">
       <h3 className="section-title" style={{ marginBottom: '20px' }}>Exportar & Backup</h3>

@@ -117,7 +117,7 @@ function App() {
 
   return (
     <div className="app-container">
-      <Header view={view} setView={setView} />
+      <Header view={view} setView={setView} onSignOut={signOut} userEmail={user?.email} />
       <div className="content-wrapper">
 
         {view === "dashboard" && (

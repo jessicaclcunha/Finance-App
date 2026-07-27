@@ -3125,3 +3125,76 @@ input[type="date"].form-input {
   display: flex;
   gap: 10px;
 }
+
+/* ===== NAV FOOTER (avatar + sair) ===== */
+.nav-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow: hidden;
+}
+
+.nav-user-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--burgundy-700);
+  color: var(--beige-100);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-serif);
+  flex-shrink: 0;
+}
+
+.nav-user-email {
+  font-size: 12px;
+  color: var(--beige-400);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Mobile: nav-footer empilhado no fundo do menu lateral */
+@media (max-width: 767px) {
+  .main-nav {
+    justify-content: space-between; /* empurra o footer para o fundo */
+  }
+
+  .nav-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 24px 0;
+  }
+
+  .nav-user {
+    padding: 0;
+  }
+
+  .nav-signout {
+    padding: 12px 0;
+  }
+}
+
+/* Desktop: nav-footer alinhado na mesma linha, com separador */
+@media (min-width: 768px) {
+  .nav-footer {
+    margin-left: 8px;
+    padding-left: 12px;
+    border-left: 1px solid var(--burgundy-700);
+  }
+
+  .nav-user-email {
+    display: none; /* poupa espaço; mostra só o avatar */
+    max-width: 140px;
+  }
+}

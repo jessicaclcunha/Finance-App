@@ -1,19 +1,7 @@
 import { useState } from "react";
 
 const LogoMark = () => (
-  <svg width="26" height="26" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    <circle cx="50" cy="50" r="48" stroke="var(--burgundy-600)" strokeWidth="1" />
-    <path d="M50 20V80" stroke="var(--beige-200)" strokeWidth="3" strokeLinecap="square" />
-    <path
-      d="M50 22C65 22 78 28 78 42C78 56 65 62 50 62"
-      stroke="var(--beige-100)" strokeWidth="5" strokeLinecap="round"
-    />
-    <path
-      d="M42 54C34 54 26 48 26 38C26 28 34 22 50 22"
-      stroke="var(--burgundy-400)" strokeWidth="3" strokeLinecap="round"
-    />
-    <circle cx="50" cy="22" r="3" fill="var(--burgundy-300)" />
-  </svg>
+  <img src="/logo.png" alt="PureProsper" style={{ width: 26, height: 26 }} />
 );
 
 const getSignOutMessage = () => {
@@ -28,12 +16,11 @@ const getSignOutMessage = () => {
 const SignOutConfirm = ({ onConfirm, onCancel }) => (
   <div className="signout-overlay" onClick={(e) => { if (e.target === e.currentTarget) onCancel(); }}>
     <div className="signout-popover fade-in">
-      <div className="signout-icon">👋</div>
-      <p className="signout-message">{getSignOutMessage()}</p>
-      <p className="signout-submessage">Tens a certeza que queres terminar a sessão?</p>
+      <p className="signout-message">Terminar sessão</p>
+      <p className="signout-submessage">Tens a certeza que queres sair da tua conta?</p>
       <div className="signout-actions">
         <button onClick={onCancel} className="btn btn-secondary btn-small" style={{ flex: 1 }}>
-          Ficar
+          Cancelar
         </button>
         <button onClick={onConfirm} className="btn btn-primary btn-small" style={{ flex: 1 }}>
           Sair
