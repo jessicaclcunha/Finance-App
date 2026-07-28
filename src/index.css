@@ -3198,3 +3198,27 @@ input[type="date"].form-input {
     max-width: 140px;
   }
 }
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.account-avatar-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 50%;
+  line-height: 0;
+  transition: box-shadow 0.2s;
+}
+
+.account-avatar-btn:hover .nav-user-avatar {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
+.account-avatar-btn.active .nav-user-avatar {
+  box-shadow: 0 0 0 2px var(--beige-300);
+}

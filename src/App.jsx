@@ -117,7 +117,7 @@ function App() {
 
   return (
     <div className="app-container">
-      <Header view={view} setView={setView} onSignOut={signOut} userEmail={user?.email} />
+      <Header view={view} setView={setView} userEmail={user?.email} />
       <div className="content-wrapper">
 
         {view === "dashboard" && (
@@ -137,7 +137,7 @@ function App() {
         )}
 
         {view === "transactions" && (
-          <TransactionList transactions={filteredTransactions}
+          <TransactionList transactions={transactions}
             onAddTransaction={handleAddTransaction}
             onDeleteTransaction={handleDeleteTransaction}
             onEditTransaction={handleEditTransaction} />

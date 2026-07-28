@@ -2,6 +2,11 @@ import { useState, useContext, useRef, useEffect } from "react";
 import TransactionForm from "./TransactionForm";
 import { CategoriesContext } from "../contexts/CategoriesContext";
 
+const MONTH_NAMES = [
+  "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+];
+
 const SwipeableItem = ({ children, onRemove }) => {
   const ref = useRef(null);
   const startX = useRef(null);
@@ -110,12 +115,33 @@ const TransactionList = ({ transactions, onAddTransaction, onDeleteTransaction, 
     return matchesFilter && matchesSearch;
   });
 
-  const sortedTransactions = [...filteredTransactions].sort((a, b) => {
+  const sortFn = (a, b) => {
     if (sortBy === "date") return b.date - a.date;
     if (sortBy === "amount") return b.amount - a.amount;
     if (sortBy === "description") return a.description.localeCompare(b.description);
     return 0;
+  };
+
+  // Agrupar por mês/ano — mais recente primeiro
+  const groupsMap = {};
+  filteredTransactions.forEach(t => {
+    const d = new Date(t.date);
+    const key = `${d.getFullYear()}-${String(d.getMonth()).padStart(2, "0")}`;
+    if (!groupsMap[key]) groupsMap[key] = [];
+    groupsMap[key].push(t);
   });
+
+  const monthGroups = Object.keys(groupsMap)
+    .sort((a, b) => b.localeCompare(a))
+    .map(key => {
+      const [year, month] = key.split("-").map(Number);
+      return {
+        key,
+        year,
+        month,
+        transactions: [...groupsMap[key]].sort(sortFn),
+      };
+    });
 
   const getCategoryInfo = (categoryId) =>
     categories.find(cat => cat.id === categoryId) || {
@@ -169,7 +195,7 @@ const TransactionList = ({ transactions, onAddTransaction, onDeleteTransaction, 
         onAddTransaction={t => { onAddTransaction(t); setIsFormOpen(false); }}
       />
 
-      {sortedTransactions.length === 0 ? (
+      {monthGroups.length === 0 ? (
         <div className="empty-state">
           <div className="empty-icon">📋</div>
           <div className="empty-title">Nenhuma transação</div>
@@ -180,65 +206,85 @@ const TransactionList = ({ transactions, onAddTransaction, onDeleteTransaction, 
           </div>
         </div>
       ) : (
-        <div className="transaction-list">
-          {sortedTransactions.map(transaction => {
-            const category = transaction.type === "expense"
-              ? getCategoryInfo(transaction.categoryId) : null;
+        monthGroups.map(group => (
+          <div key={group.key} style={{ marginBottom: "28px" }}>
+            <div style={{
+              display: "flex", alignItems: "baseline", gap: "8px",
+              marginBottom: "12px", paddingBottom: "6px",
+              borderBottom: "1px solid var(--beige-300)",
+            }}>
+              <h3 style={{
+                fontFamily: "var(--font-serif)", fontSize: "17px",
+                fontWeight: 600, color: "var(--burgundy-800)", margin: 0,
+              }}>
+                {MONTH_NAMES[group.month]} {group.year}
+              </h3>
+              <span style={{ fontSize: "12px", color: "var(--beige-600)" }}>
+                {group.transactions.length} transaç{group.transactions.length === 1 ? "ão" : "ões"}
+              </span>
+            </div>
 
-            return (
-              <SwipeableItem key={transaction.id}
-                onRemove={() => onDeleteTransaction(transaction.id)}>
-                {(triggerRemove) => (
-                  <div className="transaction-item" style={{
-                    borderLeft: transaction.isRecurring
-                      ? "3px solid var(--beige-400)" : undefined,
-                  }}>
-                    <div className="transaction-icon" style={{
-                      background: transaction.type === "income"
-                        ? "rgba(107, 155, 107, 0.15)"
-                        : category?.color ? `${category.color}20`
-                        : "rgba(212, 165, 116, 0.15)",
-                    }}>
-                      {transaction.isRecurring ? "🔄"
-                        : transaction.type === "income" ? "💰"
-                        : category ? category.icon : "📁"}
-                    </div>
+            <div className="transaction-list">
+              {group.transactions.map(transaction => {
+                const category = transaction.type === "expense"
+                  ? getCategoryInfo(transaction.categoryId) : null;
 
-                    <div className="transaction-info">
-                      <div className="transaction-description">{transaction.description}</div>
-                      <div className="transaction-meta">
-                        <span>{formatDate(transaction.date)}</span>
-                        {transaction.type === "expense" && category && (
-                          <><span>•</span><span>{category.name}</span></>
-                        )}
-                        {transaction.type === "income" && (
-                          <><span>•</span><span>Receita</span></>
-                        )}
-                        {transaction.isRecurring && (
-                          <><span>•</span>
-                          <span style={{ color: "var(--beige-600)", fontSize: "11px" }}>recorrente</span></>
-                        )}
+                return (
+                  <SwipeableItem key={transaction.id}
+                    onRemove={() => onDeleteTransaction(transaction.id)}>
+                    {(triggerRemove) => (
+                      <div className="transaction-item" style={{
+                        borderLeft: transaction.isRecurring
+                          ? "3px solid var(--beige-400)" : undefined,
+                      }}>
+                        <div className="transaction-icon" style={{
+                          background: transaction.type === "income"
+                            ? "rgba(107, 155, 107, 0.15)"
+                            : category?.color ? `${category.color}20`
+                            : "rgba(212, 165, 116, 0.15)",
+                        }}>
+                          {transaction.isRecurring ? "🔄"
+                            : transaction.type === "income" ? "💰"
+                            : category ? category.icon : "📁"}
+                        </div>
+
+                        <div className="transaction-info">
+                          <div className="transaction-description">{transaction.description}</div>
+                          <div className="transaction-meta">
+                            <span>{formatDate(transaction.date)}</span>
+                            {transaction.type === "expense" && category && (
+                              <><span>•</span><span>{category.name}</span></>
+                            )}
+                            {transaction.type === "income" && (
+                              <><span>•</span><span>Receita</span></>
+                            )}
+                            {transaction.isRecurring && (
+                              <><span>•</span>
+                              <span style={{ color: "var(--beige-600)", fontSize: "11px" }}>recorrente</span></>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="transaction-amount" style={{
+                          color: transaction.type === "income" ? "var(--success)" : "var(--warning)",
+                        }}>
+                          {transaction.type === "income" ? "+" : "−"}{transaction.amount.toFixed(2)}€
+                        </div>
+
+                        <div className="transaction-actions">
+                          <button onClick={() => setEditingId(transaction.id)}
+                            className="transaction-edit" title="Editar">✎</button>
+                          <button onClick={triggerRemove}
+                            className="transaction-delete" title="Eliminar">×</button>
+                        </div>
                       </div>
-                    </div>
-
-                    <div className="transaction-amount" style={{
-                      color: transaction.type === "income" ? "var(--success)" : "var(--warning)",
-                    }}>
-                      {transaction.type === "income" ? "+" : "−"}{transaction.amount.toFixed(2)}€
-                    </div>
-
-                    <div className="transaction-actions">
-                      <button onClick={() => setEditingId(transaction.id)}
-                        className="transaction-edit" title="Editar">✎</button>
-                      <button onClick={triggerRemove}
-                        className="transaction-delete" title="Eliminar">×</button>
-                    </div>
-                  </div>
-                )}
-              </SwipeableItem>
-            );
-          })}
-        </div>
+                    )}
+                  </SwipeableItem>
+                );
+              })}
+            </div>
+          </div>
+        ))
       )}
 
       {editingTransaction && (
