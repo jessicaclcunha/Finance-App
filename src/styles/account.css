@@ -1,0 +1,86 @@
+/* ===== MINHA CONTA ===== */
+.account-profile-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.account-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--burgundy-700);
+  color: var(--beige-100);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 600;
+  font-family: var(--font-serif);
+  flex-shrink: 0;
+}
+
+.account-info {
+  min-width: 0;
+}
+
+.account-email {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--burgundy-900);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-member-since {
+  font-size: 12px;
+  color: var(--beige-600);
+  margin-top: 2px;
+}
+
+/* Popover de confirmação de logout (usado em Account.jsx) */
+.signout-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(74, 29, 29, 0.45);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+  padding: 20px;
+}
+
+.signout-popover {
+  background: white;
+  border-radius: 12px;
+  padding: 28px 24px 20px;
+  max-width: 320px;
+  width: 100%;
+  text-align: center;
+  box-shadow: var(--shadow-lg);
+}
+
+.signout-icon {
+  font-size: 34px;
+  margin-bottom: 10px;
+}
+
+.signout-message {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  color: var(--burgundy-900);
+  margin-bottom: 6px;
+}
+
+.signout-submessage {
+  font-size: 13px;
+  color: var(--beige-700);
+  margin-bottom: 18px;
+}
+
+.signout-actions {
+  display: flex;
+  gap: 10px;
+}

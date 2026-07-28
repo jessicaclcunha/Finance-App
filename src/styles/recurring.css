@@ -1,0 +1,135 @@
+/* ===== RECURRING TRANSACTIONS ===== */
+.recurring-section {
+  margin-bottom: 32px;
+}
+
+.recurring-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+@media (min-width: 768px) {
+  .recurring-list {
+    gap: 12px;
+  }
+}
+
+.recurring-item {
+  display: grid;
+  grid-template-columns: auto auto 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 14px;
+  background: white;
+  border: 1px solid var(--beige-300);
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+@media (min-width: 768px) {
+  .recurring-item {
+    grid-template-columns: auto auto 1fr auto auto;
+    padding: 16px;
+  }
+}
+
+.recurring-toggle {
+  display: flex;
+  align-items: center;
+}
+
+.recurring-checkbox {
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+}
+
+.recurring-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+@media (min-width: 768px) {
+  .recurring-icon {
+    width: 44px;
+    height: 44px;
+    font-size: 24px;
+  }
+}
+
+.recurring-info {
+  min-width: 0;
+}
+
+.recurring-description {
+  font-weight: 500;
+  font-size: 14px;
+  margin-bottom: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (min-width: 768px) {
+  .recurring-description {
+    font-size: 15px;
+  }
+}
+
+.recurring-meta {
+  font-size: 12px;
+  color: var(--beige-700);
+}
+
+.recurring-amount {
+  font-family: var(--font-serif);
+  font-size: 16px;
+  font-weight: 500;
+  white-space: nowrap;
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .recurring-amount {
+    display: block;
+    font-size: 18px;
+  }
+}
+
+.recurring-delete {
+  padding: 10px;
+  background: none;
+  border: none;
+  color: var(--beige-600);
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 20px;
+  line-height: 1;
+  flex-shrink: 0;
+  min-width: 36px;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (min-width: 768px) {
+  .recurring-delete {
+    font-size: 24px;
+    padding: 8px;
+    min-width: auto;
+    min-height: auto;
+  }
+}
+
+.recurring-delete:hover {
+  background: var(--error);
+  color: white;
+}
