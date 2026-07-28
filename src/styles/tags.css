@@ -1,0 +1,78 @@
+/* ===== TAGS ===== */
+.tags-manager {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid var(--beige-300);
+}
+
+@media (min-width: 768px) {
+  .tags-manager {
+    padding: 24px;
+  }
+}
+
+.tag-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+@media (min-width: 640px) {
+  .tag-form {
+    flex-direction: row;
+  }
+}
+
+.tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: var(--beige-100);
+  border: 1px solid var(--beige-300);
+  border-radius: 20px;
+  font-size: 13px;
+  min-height: 36px;
+}
+
+.tag-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.tag-name {
+  font-weight: 500;
+  color: var(--burgundy-900);
+}
+
+.tag-delete {
+  background: none;
+  border: none;
+  color: var(--beige-600);
+  cursor: pointer;
+  font-size: 18px;
+  padding: 4px;
+  line-height: 1;
+  margin-left: 4px;
+  min-width: 24px;
+  min-height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+.tag-delete:hover {
+  color: var(--error);
+  background: var(--beige-200);
+}

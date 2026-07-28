@@ -1,0 +1,57 @@
+/* ===== EXPORT ===== */
+.export-section {
+  margin-top: 24px;
+}
+
+.export-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+@media (min-width: 640px) {
+  .export-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .export-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.export-card {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid var(--beige-300);
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .export-card {
+    padding: 24px;
+  }
+}
+
+.export-title {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--burgundy-900);
+  margin-bottom: 8px;
+}
+
+@media (min-width: 768px) {
+  .export-title {
+    font-size: 18px;
+  }
+}
+
+.export-description {
+  font-size: 13px;
+  color: var(--beige-700);
+  margin-bottom: 6px;
+  min-height: 38px;
+}

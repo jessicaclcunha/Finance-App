@@ -1,0 +1,248 @@
+/* ===== FILTERS ===== */
+.filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ===== EMPTY STATES ===== */
+.empty-state {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--beige-700);
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.empty-title {
+  font-family: var(--font-serif);
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--burgundy-900);
+  margin-bottom: 8px;
+}
+
+.empty-description {
+  font-size: 14px;
+  color: var(--beige-700);
+}
+
+/* ===== TRANSACTIONS ===== */
+.transaction-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+@media (min-width: 640px) {
+  .transaction-controls {
+    flex-direction: row;
+  }
+}
+
+.search-input {
+  flex: 1;
+  padding: 12px 16px;
+  font-size: 16px;
+  font-family: var(--font-sans);
+  color: var(--burgundy-900);
+  background: white;
+  border: 1px solid var(--beige-400);
+  border-radius: 6px;
+  transition: all 0.2s;
+  min-height: 48px;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--burgundy-500);
+  box-shadow: 0 0 0 3px var(--burgundy-100);
+}
+
+.sort-select {
+  padding: 12px 16px;
+  font-size: 15px;
+  font-family: var(--font-sans);
+  color: var(--burgundy-900);
+  background: white;
+  border: 1px solid var(--beige-400);
+  border-radius: 6px;
+  cursor: pointer;
+  width: 100%;
+  min-height: 48px;
+}
+
+@media (min-width: 640px) {
+  .sort-select {
+    width: auto;
+    min-width: 200px;
+  }
+}
+
+.transaction-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+@media (min-width: 768px) {
+  .transaction-list {
+    gap: 12px;
+  }
+}
+
+.transaction-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  gap: 10px;
+  align-items: center;
+  padding: 14px;
+  background: white;
+  border: 1px solid var(--beige-300);
+  border-radius: 8px;
+  transition: all 0.2s;
+  position: relative;
+}
+
+@media (min-width: 768px) {
+  .transaction-item {
+    grid-template-columns: auto 1fr auto auto;
+    padding: 16px;
+    gap: 12px;
+  }
+}
+
+.transaction-item:active {
+  transform: scale(0.98);
+}
+
+.transaction-item:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--burgundy-300);
+}
+
+.transaction-icon {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.transaction-info {
+  min-width: 0;
+}
+
+.transaction-description {
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--burgundy-900);
+  margin-bottom: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (min-width: 768px) {
+  .transaction-description {
+    font-size: 15px;
+  }
+}
+
+.transaction-meta {
+  font-size: 12px;
+  color: var(--beige-700);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.transaction-amount {
+  font-family: var(--font-serif);
+  font-size: 16px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+@media (min-width: 768px) {
+  .transaction-amount {
+    font-size: 18px;
+  }
+}
+
+.transaction-actions {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+@media (min-width: 768px) {
+  .transaction-actions {
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  
+  .transaction-item:hover .transaction-actions {
+    opacity: 1;
+  }
+}
+
+.transaction-edit,
+.transaction-delete {
+  padding: 6px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: 6px;
+  font-size: 16px;
+  line-height: 1;
+  transition: all 0.2s;
+  min-width: 30px;
+  min-height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (min-width: 768px) {
+  .transaction-edit,
+  .transaction-delete {
+    padding: 8px;
+    min-width: auto;
+    min-height: auto;
+  }
+}
+
+.transaction-edit {
+  color: var(--burgundy-600);
+}
+
+.transaction-edit:hover {
+  background: var(--burgundy-100);
+  color: var(--burgundy-900);
+}
+
+.transaction-delete {
+  color: var(--error);
+}
+
+@media (min-width: 768px) {
+  .transaction-delete {
+    color: var(--beige-600);
+  }
+}
+
+.transaction-delete:hover {
+  background: var(--error);
+  color: white;
+}
