@@ -4,6 +4,7 @@ import {
   Chart as ChartJS, CategoryScale, LinearScale, BarElement,
   PointElement, LineElement, ArcElement, Tooltip, Legend, Filler
 } from "chart.js";
+import { useCurrency } from "../contexts/CurrencyContext";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, ArcElement, Tooltip, Legend, Filler);
 
@@ -11,6 +12,7 @@ const MONTHS = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov
 
 /* ── Gauge de saúde financeira ── */
 const FinancialHealthGauge = ({ allTransactions }) => {
+  const { formatCurrency } = useCurrency();
   const allTimeInc     = allTransactions.filter(t => t.type === "income").reduce((s, t) => s + t.amount, 0);
   const allTimeExp     = allTransactions.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0);
   const allTimeBalance = allTimeInc - allTimeExp;
@@ -61,9 +63,9 @@ const FinancialHealthGauge = ({ allTransactions }) => {
       </div>
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:"8px", marginTop:"16px", borderTop:"1px solid var(--beige-200)", paddingTop:"14px" }}>
         {[
-          { label:"Total recebido",  value:`+${allTimeInc.toFixed(0)}€`,     color:"var(--success)" },
-          { label:"Total gasto",     value:`−${allTimeExp.toFixed(0)}€`,     color:"var(--warning)" },
-          { label:"Saldo acumulado", value:`${allTimeBalance>=0?"+":""}${allTimeBalance.toFixed(0)}€`, color:allTimeBalance>=0?"var(--success)":"var(--error)" },
+          { label:"Total recebido",  value: formatCurrency(allTimeInc, { decimals:0, showSign:true }),     color:"var(--success)" },
+          { label:"Total gasto",     value: formatCurrency(-allTimeExp, { decimals:0, showSign:true }),    color:"var(--warning)" },
+          { label:"Saldo acumulado", value: formatCurrency(allTimeBalance, { decimals:0, showSign:true }), color:allTimeBalance>=0?"var(--success)":"var(--error)" },
         ].map((s,i)=>(
           <div key={i} style={{ textAlign:"center" }}>
             <div style={{ fontFamily:"var(--font-serif)", fontSize:"16px", fontWeight:600, color:s.color }}>{s.value}</div>
@@ -77,6 +79,7 @@ const FinancialHealthGauge = ({ allTransactions }) => {
 
 /* ── Gráfico duplo: barras + linha saldo acumulado ── */
 const AnnualChart = ({ monthlyData, selectedYear }) => {
+  const { formatCurrency } = useCurrency();
   const today = new Date();
   const lastDataMonth = today.getFullYear() === selectedYear ? today.getMonth() : 11;
   const cumulative = monthlyData.reduce((acc, m, i) => { acc.push((acc[i-1]||0)+m.balance); return acc; }, []);
@@ -96,12 +99,12 @@ const AnnualChart = ({ monthlyData, selectedYear }) => {
     responsive:true, maintainAspectRatio:false, interaction:{mode:"index",intersect:false},
     plugins:{
       legend:{position:"top",labels:{font:{size:11},usePointStyle:true,boxWidth:8,padding:16}},
-      tooltip:{backgroundColor:"#4A1D1D",padding:10,callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.y!=null?(ctx.parsed.y>=0?"+":"")+ctx.parsed.y.toFixed(0)+"€":"—"}`}},
+      tooltip:{backgroundColor:"#4A1D1D",padding:10,callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.y!=null? formatCurrency(ctx.parsed.y,{decimals:0,showSign:true}) : "—"}`}},
     },
     scales:{
       x:{grid:{display:false},ticks:{font:{size:11}}},
-      y:{position:"left",grid:{color:"var(--beige-200)"},ticks:{callback:v=>`${v}€`,font:{size:10}},title:{display:true,text:"Receitas / Despesas",font:{size:10},color:"var(--beige-600)"}},
-      y2:{position:"right",grid:{display:false},ticks:{callback:v=>`${v>=0?"+":""}${v}€`,font:{size:10}},title:{display:true,text:"Saldo acumulado",font:{size:10},color:"var(--beige-600)"}},
+      y:{position:"left",grid:{color:"var(--beige-200)"},ticks:{callback:v=>formatCurrency(v,{decimals:0}),font:{size:10}},title:{display:true,text:"Receitas / Despesas",font:{size:10},color:"var(--beige-600)"}},
+      y2:{position:"right",grid:{display:false},ticks:{callback:v=>formatCurrency(v,{decimals:0,showSign:true}),font:{size:10}},title:{display:true,text:"Saldo acumulado",font:{size:10},color:"var(--beige-600)"}},
     },
   };
   return (
@@ -179,6 +182,7 @@ const SavingsRateChart = ({ monthlyData, selectedYear }) => {
 
 /* ── Doughnut despesas por categoria ── */
 const CategoryDoughnut = ({ allTransactions, categories, selectedYear }) => {
+  const { formatCurrency } = useCurrency();
   const catData = categories
     .filter(c => c.type === "expense" || !c.type || c.type === "both")
     .map(cat => {
@@ -209,7 +213,7 @@ const CategoryDoughnut = ({ allTransactions, categories, selectedYear }) => {
     plugins: {
       legend: { position:"bottom", labels:{font:{size:11},usePointStyle:true,padding:12,boxWidth:10} },
       tooltip: { backgroundColor:"#4A1D1D", padding:10, callbacks:{
-        label: ctx => ` ${ctx.label}: ${ctx.parsed.toFixed(0)}€ (${((ctx.parsed/totalExp)*100).toFixed(0)}%)`,
+        label: ctx => ` ${ctx.label}: ${formatCurrency(ctx.parsed,{decimals:0})} (${((ctx.parsed/totalExp)*100).toFixed(0)}%)`,
       }},
     },
   };
@@ -225,6 +229,7 @@ const CategoryDoughnut = ({ allTransactions, categories, selectedYear }) => {
 
 /* ── Top 5 categorias ── */
 const TopCategories = ({ allTransactions, categories, selectedYear }) => {
+  const { formatCurrency } = useCurrency();
   const catData = categories
     .filter(c => c.type === "expense" || !c.type || c.type === "both")
     .map(cat => {
@@ -258,10 +263,10 @@ const TopCategories = ({ allTransactions, categories, selectedYear }) => {
               <div style={{ fontSize:"20px", width:"28px", height:"28px", background:`${cat.color}20`, borderRadius:"6px", display:"flex", alignItems:"center", justifyContent:"center" }}>{cat.icon}</div>
               <div style={{ flex:1, minWidth:0 }}>
                 <div style={{ fontSize:"13px", fontWeight:500, color:"var(--burgundy-900)" }}>{cat.name}</div>
-                <div style={{ fontSize:"11px", color:"var(--beige-600)" }}>{cat.count} transações · {(cat.total/12).toFixed(0)}€/mês</div>
+                <div style={{ fontSize:"11px", color:"var(--beige-600)" }}>{cat.count} transações · {formatCurrency(cat.total/12,{decimals:0})}/mês</div>
               </div>
               <div style={{ fontFamily:"var(--font-serif)", fontSize:"16px", fontWeight:600, color:"var(--burgundy-900)", whiteSpace:"nowrap" }}>
-                {cat.total.toFixed(0)}€
+                {formatCurrency(cat.total,{decimals:0})}
               </div>
             </div>
             <div style={{ height:"6px", background:"var(--beige-200)", borderRadius:"999px", overflow:"hidden" }}>
@@ -276,6 +281,7 @@ const TopCategories = ({ allTransactions, categories, selectedYear }) => {
 
 /* ── Distribuição receitas vs despesas por categoria (barras horizontais) ── */
 const CategoryDistributionChart = ({ allTransactions, categories, selectedYear }) => {
+  const { symbol, formatCurrency } = useCurrency();
   const data = categories
     .filter(c => c.type === "expense" || !c.type || c.type === "both")
     .map(cat => {
@@ -322,12 +328,12 @@ const CategoryDistributionChart = ({ allTransactions, categories, selectedYear }
       legend: { position:"top", labels:{font:{size:11},usePointStyle:true,boxWidth:8,padding:16} },
       tooltip: { backgroundColor:"#4A1D1D", padding:10, callbacks:{
         label: ctx => ctx.datasetIndex === 0
-          ? ` Despesa: ${ctx.parsed.x.toFixed(0)}€`
+          ? ` Despesa: ${formatCurrency(ctx.parsed.x,{decimals:0})}`
           : ` % receitas: ${ctx.parsed.x.toFixed(1)}%`,
       }},
     },
     scales: {
-      x:  { position:"bottom", grid:{color:"var(--beige-200)"}, ticks:{callback:v=>`${v}€`,  font:{size:10}}, title:{display:true,text:"Valor gasto (€)",font:{size:10},color:"var(--beige-600)"} },
+      x:  { position:"bottom", grid:{color:"var(--beige-200)"}, ticks:{callback:v=>formatCurrency(v,{decimals:0}),  font:{size:10}}, title:{display:true,text:`Valor gasto (${symbol})`,font:{size:10},color:"var(--beige-600)"} },
       x2: { position:"top",    grid:{display:false},            ticks:{callback:v=>`${v}%`,  font:{size:10}}, title:{display:true,text:"% das receitas",font:{size:10},color:"var(--beige-600)"} },
       y:  { grid:{display:false}, ticks:{font:{size:11}} },
       y2: { display:false },
@@ -345,6 +351,7 @@ const CategoryDistributionChart = ({ allTransactions, categories, selectedYear }
 
 /* ── Evolução histórica multi-ano ── */
 const MultiYearChart = ({ allTransactions }) => {
+  const { formatCurrency } = useCurrency();
   const currentYear = new Date().getFullYear();
   const years = [...new Set(allTransactions.map(t => new Date(t.date).getFullYear()))].sort();
   if (years.length < 2) return null;
@@ -380,12 +387,12 @@ const MultiYearChart = ({ allTransactions }) => {
     plugins: {
       legend: { position:"top", labels:{font:{size:11},usePointStyle:true,boxWidth:8,padding:12} },
       tooltip: { backgroundColor:"#4A1D1D", padding:10, callbacks:{
-        label: ctx => ctx.parsed.y != null ? ` ${ctx.dataset.label}: ${ctx.parsed.y>=0?"+":""}${ctx.parsed.y.toFixed(0)}€` : null,
+        label: ctx => ctx.parsed.y != null ? ` ${ctx.dataset.label}: ${formatCurrency(ctx.parsed.y,{decimals:0,showSign:true})}` : null,
       }},
     },
     scales: {
       x: { grid:{display:false}, ticks:{font:{size:11}} },
-      y: { grid:{color:"var(--beige-200)"}, ticks:{callback:v=>`${v>=0?"+":""}${v}€`,font:{size:10}} },
+      y: { grid:{color:"var(--beige-200)"}, ticks:{callback:v=>formatCurrency(v,{decimals:0,showSign:true}),font:{size:10}} },
     },
   };
 
@@ -400,6 +407,7 @@ const MultiYearChart = ({ allTransactions }) => {
 
 /* ── Linha de evolução do saldo (dashboard compact) ── */
 const BalanceTrendChart = ({ monthlyData, selectedYear }) => {
+  const { formatCurrency } = useCurrency();
   const today = new Date();
   const lastDataMonth = today.getFullYear() === selectedYear ? today.getMonth() : 11;
   const cumulative = monthlyData.reduce((acc, m, i) => { acc.push((acc[i-1]||0)+m.balance); return acc; }, []);
@@ -423,11 +431,11 @@ const BalanceTrendChart = ({ monthlyData, selectedYear }) => {
     responsive: true, maintainAspectRatio: false,
     plugins: {
       legend: { display:false },
-      tooltip: { backgroundColor:"#4A1D1D", padding:10, callbacks:{label:ctx=>`Saldo: ${ctx.parsed.y>=0?"+":""}${ctx.parsed.y.toFixed(0)}€`} },
+      tooltip: { backgroundColor:"#4A1D1D", padding:10, callbacks:{label:ctx=>`Saldo: ${formatCurrency(ctx.parsed.y,{decimals:0,showSign:true})}`} },
     },
     scales: {
       x: { grid:{display:false}, ticks:{font:{size:10}} },
-      y: { grid:{color:"var(--beige-200)"}, ticks:{callback:v=>`${v>=0?"+":""}${v}€`,font:{size:10}} },
+      y: { grid:{color:"var(--beige-200)"}, ticks:{callback:v=>formatCurrency(v,{decimals:0,showSign:true}),font:{size:10}} },
     },
   };
   return (
@@ -441,6 +449,7 @@ const BalanceTrendChart = ({ monthlyData, selectedYear }) => {
 
 /* ── Componente principal ── */
 const AnnualView = ({ allTransactions, selectedYear, compact = false }) => {
+  const { formatCurrency } = useCurrency();
   const monthlyData = MONTHS.map((month, index) => {
     const tx = allTransactions.filter(t => { const d = new Date(t.date); return d.getMonth()===index && d.getFullYear()===selectedYear; });
     const income   = tx.filter(t=>t.type==="income").reduce((s,t)=>s+t.amount,0);
@@ -476,7 +485,7 @@ const AnnualView = ({ allTransactions, selectedYear, compact = false }) => {
           <div className="balance-info">
             <div className="balance-label-main" style={{ color:yearTotals.balance>=0?"var(--success)":"var(--burgundy-700)" }}>Saldo Anual</div>
             <div className={`balance-amount-main ${yearTotals.balance>=0?"positive":"negative"}`}>
-              {yearTotals.balance>=0?"+":""}{yearTotals.balance.toFixed(2)}€
+              {formatCurrency(yearTotals.balance, { decimals:2, showSign:true })}
             </div>
           </div>
         </div>
@@ -484,13 +493,13 @@ const AnnualView = ({ allTransactions, selectedYear, compact = false }) => {
       <div className="stats-compact">
         <div className="stat-compact income">
           <div className="stat-compact-header"><span className="stat-compact-label">Receitas</span></div>
-          <div className="stat-compact-value positive">+{yearTotals.income.toFixed(2)}€</div>
+          <div className="stat-compact-value positive">{formatCurrency(yearTotals.income, { decimals:2, showSign:true })}</div>
           <div className="stat-compact-detail">{yearTotals.transactions} transações</div>
         </div>
         <div className="stat-compact expense">
           <div className="stat-compact-header"><span className="stat-compact-label">Despesas</span></div>
-          <div className="stat-compact-value negative">−{yearTotals.expenses.toFixed(2)}€</div>
-          <div className="stat-compact-detail">Média {(yearTotals.expenses/12).toFixed(0)}€/mês</div>
+          <div className="stat-compact-value negative">{formatCurrency(-yearTotals.expenses, { decimals:2, showSign:true })}</div>
+          <div className="stat-compact-detail">Média {formatCurrency(yearTotals.expenses/12, { decimals:0 })}/mês</div>
         </div>
       </div>
     </div>
@@ -519,14 +528,14 @@ const AnnualView = ({ allTransactions, selectedYear, compact = false }) => {
             <div className="annual-stat-mini">
               <div className="annual-stat-mini-label">Melhor mês</div>
               <div className="annual-stat-mini-value" style={{ color:"var(--success)" }}>{bestMonth.month}</div>
-              <div style={{ fontSize:"11px", color:"var(--beige-600)", marginTop:"2px" }}>+{bestMonth.balance.toFixed(0)}€</div>
+              <div style={{ fontSize:"11px", color:"var(--beige-600)", marginTop:"2px" }}>{formatCurrency(bestMonth.balance,{decimals:0,showSign:true})}</div>
             </div>
           )}
           {worstMonth && (
             <div className="annual-stat-mini">
               <div className="annual-stat-mini-label">Pior mês</div>
               <div className="annual-stat-mini-value" style={{ color:"var(--error)" }}>{worstMonth.month}</div>
-              <div style={{ fontSize:"11px", color:"var(--beige-600)", marginTop:"2px" }}>{worstMonth.balance.toFixed(0)}€</div>
+              <div style={{ fontSize:"11px", color:"var(--beige-600)", marginTop:"2px" }}>{formatCurrency(worstMonth.balance,{decimals:0,showSign:true})}</div>
             </div>
           )}
         </div>
@@ -548,10 +557,10 @@ const AnnualView = ({ allTransactions, selectedYear, compact = false }) => {
             {monthlyData.map((data, index) => (
               <tr key={index} className={`${data.count===0?"empty-month":""} ${index===currentMonth&&selectedYear===currentYear?"current-month-row":""}`}>
                 <td className="month-name">{data.month}</td>
-                <td className="amount-positive">{data.income>0?`+${data.income.toFixed(0)}€`:"—"}</td>
-                <td className="amount-negative">{data.expenses>0?`−${data.expenses.toFixed(0)}€`:"—"}</td>
+                <td className="amount-positive">{data.income>0?formatCurrency(data.income,{decimals:0,showSign:true}):"—"}</td>
+                <td className="amount-negative">{data.expenses>0?formatCurrency(-data.expenses,{decimals:0,showSign:true}):"—"}</td>
                 <td className={data.balance>=0?"amount-positive":"amount-negative"}>
-                  <strong>{data.balance!==0?`${data.balance>=0?"+":""}${data.balance.toFixed(0)}€`:"—"}</strong>
+                  <strong>{data.balance!==0?formatCurrency(data.balance,{decimals:0,showSign:true}):"—"}</strong>
                 </td>
                 <td className="transaction-count">{data.count||"—"}</td>
               </tr>
@@ -560,10 +569,10 @@ const AnnualView = ({ allTransactions, selectedYear, compact = false }) => {
           <tfoot>
             <tr className="totals-row">
               <td><strong>Total</strong></td>
-              <td className="amount-positive"><strong>+{yearTotals.income.toFixed(0)}€</strong></td>
-              <td className="amount-negative"><strong>−{yearTotals.expenses.toFixed(0)}€</strong></td>
+              <td className="amount-positive"><strong>{formatCurrency(yearTotals.income,{decimals:0,showSign:true})}</strong></td>
+              <td className="amount-negative"><strong>{formatCurrency(-yearTotals.expenses,{decimals:0,showSign:true})}</strong></td>
               <td className={yearTotals.balance>=0?"amount-positive":"amount-negative"}>
-                <strong>{yearTotals.balance>=0?"+":""}{yearTotals.balance.toFixed(0)}€</strong>
+                <strong>{formatCurrency(yearTotals.balance,{decimals:0,showSign:true})}</strong>
               </td>
               <td className="transaction-count"><strong>{yearTotals.transactions}</strong></td>
             </tr>
