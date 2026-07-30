@@ -1,4 +1,8 @@
+import { useCurrency } from "../contexts/CurrencyContext";
+
 const BudgetAlerts = ({ transactions, categories }) => {
+  const { formatCurrency } = useCurrency();
+
   const expenseCategories = categories.filter(
     cat => (cat.type === "expense" || !cat.type || cat.type === "both") && cat.budget > 0
   );
@@ -89,10 +93,10 @@ const BudgetAlerts = ({ transactions, categories }) => {
                   fontWeight: 500,
                   color: cat.isOver ? "var(--error)" : "var(--burgundy-900)",
                 }}>
-                  {cat.spent.toFixed(0)}€
+                  {formatCurrency(cat.spent, { decimals: 0 })}
                 </span>
                 <span style={{ fontSize: "12px", color: "var(--beige-600)" }}>
-                  /{cat.budget.toFixed(0)}€
+                  /{formatCurrency(cat.budget, { decimals: 0 })}
                 </span>
               </div>
             </div>
@@ -125,8 +129,8 @@ const BudgetAlerts = ({ transactions, categories }) => {
                 fontWeight: cat.isOver ? 600 : 400,
               }}>
                 {cat.isOver
-                  ? `${Math.abs(cat.remaining).toFixed(0)}€ excedido`
-                  : `${cat.remaining.toFixed(0)}€ restante`}
+                  ? `${formatCurrency(Math.abs(cat.remaining), { decimals: 0 })} excedido`
+                  : `${formatCurrency(cat.remaining, { decimals: 0 })} restante`}
               </span>
             </div>
           </div>

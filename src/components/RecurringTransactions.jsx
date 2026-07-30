@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../contexts/AuthContext";
+import { useCurrency } from "../contexts/CurrencyContext";
 import { fromDbRecurring, toDbRecurring } from "../lib/mappers";
 
 const RecurringTransactions = () => {
   const { user } = useAuth();
+  const { symbol, formatCurrency } = useCurrency();
   const [recurring, setRecurring] = useState([]);
   const [isAddingRecurring, setIsAddingRecurring] = useState(false);
   const [formData, setFormData] = useState({
@@ -107,7 +109,7 @@ const RecurringTransactions = () => {
 
             <div className="form-row">
               <div className="form-group">
-                <label className="form-label">Valor (€)</label>
+                <label className="form-label">Valor ({symbol})</label>
                 <input type="number" placeholder="0.00" value={formData.amount}
                   onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                   className="form-input" step="0.01" min="0.01" required />
@@ -165,7 +167,7 @@ const RecurringTransactions = () => {
                 color: item.type === "income" ? 'var(--success)' : 'var(--warning)',
                 opacity: item.active ? 1 : 0.6,
               }}>
-                {item.type === "income" ? "+" : "−"}{item.amount.toFixed(2)}€
+                {formatCurrency(item.type === "income" ? item.amount : -item.amount, { decimals: 2, showSign: true })}
               </div>
               <button onClick={() => handleDelete(item.id)} className="recurring-delete">×</button>
             </div>

@@ -1,5 +1,6 @@
 import { useState, useContext } from "react";
 import { CategoriesContext } from "../contexts/CategoriesContext";
+import { useCurrency } from "../contexts/CurrencyContext";
 
 
 const TransactionForm = ({
@@ -11,6 +12,7 @@ const TransactionForm = ({
 }) => {
   const isEditing = Boolean(transaction);
   const { categories } = useContext(CategoriesContext);
+  const { symbol } = useCurrency();
 
   const getInitialState = () => {
     if (isEditing) {
@@ -177,7 +179,7 @@ const TransactionForm = ({
           {/* Valor + Data */}
           <div className="form-row">
             <div className="form-group">
-              <label className="form-label">Valor (€)</label>
+              <label className="form-label">Valor ({symbol})</label>
               <input
                 type="number"
                 placeholder="0.00"
