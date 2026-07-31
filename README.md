@@ -2,17 +2,9 @@
 
 # PureProsper
 
-### Gestor de Finanças Pessoais
+**As tuas finanças, sem drama.**
 
-**PureProsper** é uma aplicação web para acompanhar receitas e despesas, gerir orçamentos por categoria, visualizar gráficos e definir objetivos de poupança — tudo guardado localmente no teu browser, sem necessidade de conta ou servidor.
-
-[![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://react.dev/)
-[![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
-[![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
-[![Chart.js](https://img.shields.io/badge/Chart.js-FF6384?style=for-the-badge&logo=chartdotjs&logoColor=white)](https://www.chartjs.org/)
-[![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://pure-prosper-bda0ic4df-jessicas-projects-19cffcf6.vercel.app)
-
-🔗 [Ver Demo ao Vivo](https://pure-prosper-bda0ic4df-jessicas-projects-19cffcf6.vercel.app) &nbsp;·&nbsp; [Repositório](https://github.com/jessicaclcunha/Finance-App)
+**[🔗 Ver demo](https://pure-prosper.vercel.app)**
 
 > ⚠️ Projeto em desenvolvimento ativo — funcionalidades podem estar incompletas ou sujeitas a alterações.
 
@@ -20,112 +12,96 @@
 
 ---
 
-## Índice
+## Porque é que isto existe
 
-- [Sobre o Projeto](#-sobre-o-projeto)
-- [Funcionalidades](#-funcionalidades)
-- [Tecnologias](#-tecnologias)
-- [Estrutura do Projeto](#-estrutura-do-projeto)
-- [Arquitetura e Decisões Técnicas](#-arquitetura-e-decisões-técnicas)
+Ninguém gosta de registar despesas. Por isso o PureProsper tenta tornar o hábito viciante em vez de aborrecido: streaks 🔥, conquistas 🏆, um score de saúde financeira que sobe (ou desce) consoante os teus hábitos, e confetti a sério quando completas uma meta de poupança.
 
----
-
-## Sobre o Projeto
-
-O **PureProsper** nasceu da necessidade de ter uma ferramenta simples e intuitiva para gerir as finanças pessoais do dia a dia. Sem contas, sem servidores, sem complicações — os dados ficam no teu browser e só tu tens acesso a eles.
-
-A aplicação permite ter uma visão clara de para onde vai o dinheiro, comparar meses, acompanhar o progresso face aos objetivos de poupança, registar transações recorrentes e gerir orçamentos por categoria de forma totalmente personalizável.
-
----
+É uma SPA em React que fala diretamente com o Supabase (sem backend próprio) — cada utilizador só vê e edita os seus dados, garantido por Row Level Security (RLS) nas tabelas.
 
 ## Funcionalidades
 
 ### Dashboard
-Visão geral do mês selecionado com saldo atual, total de receitas e total de despesas. Inclui widgets inteligentes com dias restantes no mês, média diária de gastos, orçamento disponível por dia e projeção de gastos até ao fim do mês. Lista também as 5 maiores despesas do período.
+Vista mensal ou anual (alternável no `MonthPicker`) com saldo do período, total de receitas/despesas, e insights automáticos: dias restantes do mês, média de gasto diário, orçamento disponível por dia, e uma projeção do gasto total até ao fim do mês baseada na média atual. Mostra ainda o top 5 de maiores despesas do período.
 
 ### Transações
-Registo completo de receitas e despesas com suporte a criação, edição e eliminação via modal. Inclui pesquisa por descrição, filtragem por tipo (todas / receitas / despesas) e ordenação por data, valor ou nome. As datas são apresentadas de forma amigável ("Hoje", "Ontem", etc.).
+CRUD completo com pesquisa por descrição, ordenação (data / valor / nome) e filtro por tipo (receita/despesa). As transações são agrupadas por mês na listagem. Em mobile, arrastar um item para a esquerda revela a opção de eliminar (swipe-to-delete).
 
-### Transações Recorrentes
-Gestão de pagamentos e receitas que se repetem regularmente, como subscrições, renda ou salário. Suporta frequências semanais, quinzenais, mensais e anuais, com possibilidade de ativar/desativar cada entrada individualmente.
+### Transações recorrentes
+Define uma despesa/receita (ex: renda, Netflix, salário) com frequência — semanal, quinzenal, mensal ou anual — e o `useRecurringInjector` gera automaticamente, ao iniciar sessão, todas as ocorrências que ainda faltam desde a criação até hoje, evitando duplicados através de uma `recurring_key` única por ocorrência.
+
+### Categorias
+Cada categoria tem ícone (emoji livre), cor e um orçamento mensal opcional. Podem ser só de despesa, só de receita, ou "ambos". Categorias com orçamento definido acionam alertas visuais (`BudgetAlerts`) quando o gasto se aproxima (≥80%) ou ultrapassa o limite.
+
+### Metas de poupança
+Cada meta tem valor alvo, prazo e valor poupado até agora. A barra de progresso anima-se ao adicionar valor (botões rápidos +5/+10/+20 ou valor livre), mostra marcos aos 25/50/75/100%, e dispara confetti + destaque visual ao atingir 100% pela primeira vez. Se poupares mais do que o alvo, a meta continua a aceitar valores e mostra o excedente.
 
 ### Análise
-Gráficos interativos com duas vistas: comparação entre gasto real e orçamento por categoria (gráfico de barras) e distribuição percentual de gastos (gráfico de rosca). Inclui também a evolução mensal de receitas vs despesas ao longo do ano com um gráfico de linhas.
+Três vistas complementares ao dashboard:
+- **Previsão** — gráfico de gasto acumulado real vs. projetado até ao fim do mês.
+- **Categorias** — comparação do gasto por categoria face ao mês anterior, com variação percentual.
+- **Padrões** — em que dia da semana e em que semana do mês gastas mais.
 
-### Vista Anual
-Resumo completo do ano com gráfico de barras interativo mês a mês (com tooltip ao passar o rato), tabela detalhada com receitas, despesas e saldo de cada mês, totais anuais e identificação do melhor e pior mês.
+A vista anual (`AnnualView`) acrescenta um "gauge" de saúde financeira global (baseado na tua taxa de poupança histórica), evolução do saldo acumulado, taxa de poupança mês a mês, distribuição de despesas por categoria (doughnut) e comparação entre anos, quando existe histórico de mais do que um ano.
 
-### Objetivos de Poupança
-Criação e acompanhamento de metas financeiras com data-alvo. Barra de progresso animada com marcos a 25%, 50% e 75%, efeito de celebração ao atingir 100%, botões de adição rápida de valores (+10€, +50€, +100€) e a possibilidade de inserir um valor personalizado.
+### Gamificação
+- **Score (0–100)** — combina saldo positivo do mês (30 pts), taxa de poupança do mês (25 pts), respeito pelos orçamentos definidos (25 pts) e a média da taxa de poupança dos últimos 3 meses (20 pts).
+- **Streak** — dias consecutivos com pelo menos uma transação registada.
+- **15 conquistas** — desde "primeira transação" a "taxa de poupança acima de 30%", passando por metas atingidas/superadas e uso de várias categorias.
+- **Desafios do mês** — gerados dinamicamente: poupar 20% do rendimento, reduzir 10% na categoria onde mais gastas, e fechar o mês com saldo positivo.
 
-### Categorias Personalizadas
-Criação e gestão de categorias com nome, ícone (qualquer emoji), cor personalizada (color picker) e orçamento mensal. Inclui um conjunto de categorias predefinidas para começar de imediato e sugestões rápidas de emojis.
+### Multi-moeda
+EUR, USD, GBP e BRL, escolhida em **Minha Conta → Preferências** e guardada nos metadados do utilizador Supabase — aplica-se instantaneamente a toda a app via `CurrencyContext`.
 
-### Etiquetas
-Sistema de etiquetas (tags) para classificar e organizar transações com cores personalizadas, guardadas em `localStorage`.
+### Exportação & Backup
+- **CSV** — tabela simples para Excel/Sheets.
+- **JSON** — dados estruturados com estatísticas agregadas.
+- **Backup completo** — inclui transações, categorias, metas e recorrências; pode ser restaurado noutra conta (os IDs são remapeados, os dados são *adicionados*, não substituem os existentes).
 
-### Exportação e Backup
-Exportação das transações para CSV (compatível com Excel e Google Sheets), criação de backups completos em JSON (inclui transações, categorias, metas e transações recorrentes) e restauro de backups anteriores.
+### Autenticação
+Email/palavra-passe (com confirmação de email obrigatória antes de aceder à app) ou login com Google, ambos via Supabase Auth.
 
-### Design Responsivo
-Navegação adaptada a mobile com menu hamburger e layout fluido para diferentes tamanhos de ecrã.
+## Tecnologias usadas
 
----
+- **Frontend:** React + Vite
+- **Gráficos:** Chart.js / react-chartjs-2
+- **Backend:** Supabase (Postgres, Auth, Row Level Security)
 
-## Tecnologias
+Sem Redux nem gestor de estado externo: o estado global vive em três Contexts (`AuthContext`, `CategoriesContext`, `CurrencyContext`) e o resto é `useState`/`useMemo` local a cada componente.
 
-| Tecnologia | Versão | Descrição |
-|---|---|---|
-| [React](https://react.dev/) | 18+ | Biblioteca principal para a interface |
-| [Vite](https://vitejs.dev/) | 5+ | Bundler e servidor de desenvolvimento |
-| [Chart.js](https://www.chartjs.org/) + [react-chartjs-2](https://react-chartjs-2.js.org/) | — | Gráficos de barras, rosca e linhas |
-| Context API | — | Gestão de estado global das categorias |
-| `localStorage` | — | Persistência de dados no browser |
-| CSS Modular | — | Estilos organizados por componente |
-
----
-
-## Estrutura do Projeto
+## Estrutura
 
 ```
 src/
-├── components/
-│   ├── Header.jsx                 # Navegação principal com menu hamburger (mobile)
-│   ├── Dashboard.jsx              # Saldo, receitas e despesas do mês
-│   ├── MonthInsights.jsx          # Widgets inteligentes e maiores despesas
-│   ├── TransactionList.jsx        # Lista de transações com filtros e pesquisa
-│   ├── TransactionForm.jsx        # Formulário de criação de nova transação
-│   ├── RecurringTransactions.jsx  # Gestão de transações recorrentes
-│   ├── Charts.jsx                 # Gráficos de barras e rosca por categoria
-│   ├── MonthlyComparison.jsx      # Gráfico de linhas — evolução mensal anual
-│   ├── AnnualView.jsx             # Vista anual com gráfico e tabela resumo
-│   ├── MonthPicker.jsx            # Seletor de mês/ano com toggle mensal/anual
-│   ├── SavingsGoals.jsx           # Metas de poupança com barra animada
-│   ├── CategoryManager.jsx        # Criação e edição de categorias
-│   ├── TagsManager.jsx            # Gestão de etiquetas personalizadas
-│   └── ExportData.jsx             # Exportação CSV, backup e restauro JSON
-├── contexts/
-│   └── CategoriesContext.jsx      # Estado global das categorias (Context API)
-├── App.jsx                        # Componente raiz, routing e estado principal
-├── App.css                        # Estilos globais
-├── main.jsx                       # Entry point da aplicação
-└── index.css                      # Reset e variáveis CSS
+├── components/   # UI — um componente por ecrã/secção
+│   ├── Dashboard.jsx          # saldo + receitas/despesas do período
+│   ├── TransactionList.jsx    # CRUD de transações
+│   ├── CategoryManager.jsx    # CRUD de categorias
+│   ├── SavingsGoals.jsx       # metas de poupança
+│   ├── AnalysisView.jsx       # previsão / categorias / padrões
+│   ├── AnnualView.jsx         # vista anual completa
+│   ├── GamificationPanel.jsx  # score, streak, conquistas, desafios
+│   ├── Account.jsx            # perfil, preferências, sign out
+│   └── Auth.jsx                # login / registo / confirmação de email
+├── contexts/     # AuthContext, CategoriesContext, CurrencyContext
+├── hooks/        # useGamification (score/streak/conquistas), useRecurringInjector
+├── lib/          # supabaseClient, mappers (linha da BD ⇄ objeto da app), currency
+├── styles/       # 1 ficheiro CSS por secção, todos importados em index.css
+public/
+└── logo.svg / logo.png
 ```
 
----
 
-## Arquitetura e Decisões Técnicas
 
-**Estado Global vs. Local** — As categorias são geridas globalmente via Context API (`CategoriesContext`) por serem partilhadas entre vários componentes. O estado das transações vive no `App.jsx` e é passado por props, mantendo um fluxo de dados previsível.
+## Notas
 
-**Persistência** — Todos os dados são guardados em `localStorage` com chaves separadas por entidade (`transactions`, `categories`, `savingsGoals`, `recurringTransactions`, `tags`), permitindo backups parciais e restauros granulares.
-
-**Routing por Estado** — A navegação entre vistas é feita via estado React (`view` state) em vez de um router externo, simplificando a estrutura para uma SPA sem necessidade de URLs distintas.
-
-**Animações** — A barra de progresso das metas usa `requestAnimationFrame` com easing cúbico para uma animação suave, sem dependências externas.
+- Interface toda em português de Portugal (pt-PT) 🇵🇹
+- Moeda configurável em **Minha Conta → Preferências**, aplicada em toda a app instantaneamente
+- Sem anúncios, sem tracking esquisito — só tu e as tuas contas
 
 ---
 
 <div align="center">
-  Feito com ❤️ por <a href="https://github.com/jessicaclcunha">Jessica Cunha</a>
+<sub>Feito para quem quer poupar sem sofrer a fazê-lo.</sub>
+
+Feito com ❤️ por <a href="https://github.com/jessicaclcunha">Jessica Cunha</a>
 </div>
