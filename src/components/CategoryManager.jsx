@@ -1,10 +1,8 @@
 import { useState, useContext } from "react";
 import { CategoriesContext } from "../contexts/CategoriesContext";
-import { useCurrency } from "../contexts/CurrencyContext";
 
 const CategoryManager = () => {
   const { categories, addCategory, updateCategory, deleteCategory } = useContext(CategoriesContext);
-  const { symbol, formatCurrency } = useCurrency();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
   const [filterType, setFilterType] = useState("all"); // "all" | "expense" | "income"
@@ -137,7 +135,7 @@ const CategoryManager = () => {
                       </span>
                       {(category.type === "expense" || !category.type || category.type === "both") && category.budget > 0 && (
                         <div className="category-budget" style={{ color: category.color }}>
-                          {formatCurrency(category.budget, { decimals: 0 })}/mês
+                          {category.budget.toFixed(0)}€/mês
                         </div>
                       )}
                     </div>
@@ -257,7 +255,7 @@ const CategoryManager = () => {
               {/* Orçamento só para despesa/ambos */}
               {(formData.type === "expense" || formData.type === "both") && (
                 <div className="form-group">
-                  <label className="form-label">Orçamento Mensal ({symbol})</label>
+                  <label className="form-label">Orçamento Mensal (€)</label>
                   <input
                     type="number"
                     value={formData.budget}

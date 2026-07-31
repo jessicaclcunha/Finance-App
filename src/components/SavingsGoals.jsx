@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../contexts/AuthContext";
-import { useCurrency } from "../contexts/CurrencyContext";
 import { fromDbGoal, toDbGoal } from "../lib/mappers";
 
 const AnimatedProgressBar = ({ progress, isCompleted, isOverdue }) => {
@@ -109,8 +108,7 @@ const AnimatedProgressBar = ({ progress, isCompleted, isOverdue }) => {
 };
 
 /* ── Counter animado ── */
-const AnimatedValue = ({ value, decimals = 2 }) => {
-  const { formatCurrency } = useCurrency();
+const AnimatedValue = ({ value, decimals = 2, suffix = "€" }) => {
   const [displayed, setDisplayed] = useState(value);
   const prevRef = useRef(value);
 
@@ -130,12 +128,11 @@ const AnimatedValue = ({ value, decimals = 2 }) => {
     requestAnimationFrame(animate);
   }, [value]);
 
-  return <span>{formatCurrency(displayed, { decimals })}</span>;
+  return <span>{displayed.toFixed(decimals)}{suffix}</span>;
 };
 
 /* ── Modal de edição ── */
 const GoalEditModal = ({ goal, onSave, onCancel }) => {
-  const { symbol } = useCurrency();
   const [formData, setFormData] = useState({
     name: goal.name, target: goal.target,
     deadline: goal.deadline, saved: goal.saved,
@@ -162,7 +159,7 @@ const GoalEditModal = ({ goal, onSave, onCancel }) => {
           </div>
           <div className="form-row">
             <div className="form-group">
-              <label className="form-label">Valor Alvo ({symbol})</label>
+              <label className="form-label">Valor Alvo (€)</label>
               <input type="number" value={formData.target}
                 onChange={e => setFormData({ ...formData, target: e.target.value })}
                 className="form-input" step="0.01" min="0.01" required />
@@ -175,7 +172,7 @@ const GoalEditModal = ({ goal, onSave, onCancel }) => {
             </div>
           </div>
           <div className="form-group">
-            <label className="form-label">Valor Poupado ({symbol})</label>
+            <label className="form-label">Valor Poupado (€)</label>
             <input type="number" value={formData.saved}
               onChange={e => setFormData({ ...formData, saved: e.target.value })}
               className="form-input" step="0.01" min="0" required />
@@ -193,7 +190,6 @@ const GoalEditModal = ({ goal, onSave, onCancel }) => {
 /* ── Componente principal ── */
 const SavingsGoals = () => {
   const { user } = useAuth();
-  const { symbol, formatCurrency } = useCurrency();
   const [goals, setGoals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isAddingGoal, setIsAddingGoal] = useState(false);
@@ -297,7 +293,7 @@ const SavingsGoals = () => {
   };
 
   const handleCustomAmount = (id) => {
-    const amount = prompt(`Valor a adicionar (${symbol}) — use negativo para remover:`);
+    const amount = prompt("Valor a adicionar (€) — use negativo para remover:");
     if (amount && !isNaN(parseFloat(amount)))
       handleUpdateSaved(id, parseFloat(amount));
   };
@@ -325,7 +321,7 @@ const SavingsGoals = () => {
           <h2 className="section-title">Metas de Poupança</h2>
           {goals.length > 0 && (
             <p style={{ fontSize: "13px", color: "var(--beige-700)", marginTop: "4px" }}>
-              {completedCount}/{goals.length} concluídas · {formatCurrency(totalSaved, { decimals: 0 })} / {formatCurrency(totalTarget, { decimals: 0 })}
+              {completedCount}/{goals.length} concluídas · {totalSaved.toFixed(0)}€ / {totalTarget.toFixed(0)}€
             </p>
           )}
         </div>
@@ -363,7 +359,7 @@ const SavingsGoals = () => {
             </div>
             <div className="form-row">
               <div className="form-group">
-                <label className="form-label">Valor Alvo ({symbol})</label>
+                <label className="form-label">Valor Alvo (€)</label>
                 <input type="number" placeholder="0.00" value={newGoal.target}
                   onChange={e => setNewGoal({ ...newGoal, target: e.target.value })}
                   className="form-input" step="0.01" min="0.01" required />
@@ -401,8 +397,8 @@ const SavingsGoals = () => {
             const isCelebrating = celebratingId === goal.id;
             const remaining  = goal.target - goal.saved;
             const monthlyNeeded = daysLeft > 0 && remaining > 0
-              ? remaining / (daysLeft / 30) : null;
-            const overAmount = isOver ? goal.saved - goal.target : null;
+              ? (remaining / (daysLeft / 30)).toFixed(0) : null;
+            const overAmount = isOver ? (goal.saved - goal.target).toFixed(2) : null;
 
             return (
               <div key={goal.id}
@@ -447,7 +443,7 @@ const SavingsGoals = () => {
                     <span className="goal-amount">
                       <AnimatedValue value={goal.saved} />
                     </span>
-                    <span className="goal-target"> / {formatCurrency(goal.target, { decimals: 2 })}</span>
+                    <span className="goal-target"> / {goal.target.toFixed(2)}€</span>
                   </div>
                   <div className="goal-percentage" style={{ color: isOver ? "var(--success)" : undefined }}>
                     {progress.toFixed(0)}%
@@ -462,7 +458,7 @@ const SavingsGoals = () => {
                     borderRadius: "8px", padding: "8px 12px", marginBottom: "10px",
                     fontSize: "12px", color: "var(--success)", fontWeight: 600, textAlign: "center",
                   }}>
-                    🎉 Meta superada em {formatCurrency(overAmount, { decimals: 2 })}!
+                    🎉 Meta superada em {overAmount}€!
                   </div>
                 )}
 
@@ -480,12 +476,12 @@ const SavingsGoals = () => {
                   <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
                     <div style={{ flex: 1, background: "var(--beige-50)", borderRadius: "6px", padding: "8px", border: "1px solid var(--beige-200)", textAlign: "center" }}>
                       <div style={{ fontSize: "10px", color: "var(--beige-700)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>Falta</div>
-                      <div style={{ fontSize: "15px", fontFamily: "var(--font-serif)", color: "var(--burgundy-700)" }}>{formatCurrency(remaining, { decimals: 0 })}</div>
+                      <div style={{ fontSize: "15px", fontFamily: "var(--font-serif)", color: "var(--burgundy-700)" }}>{remaining.toFixed(0)}€</div>
                     </div>
                     {monthlyNeeded && (
                       <div style={{ flex: 1, background: "var(--beige-50)", borderRadius: "6px", padding: "8px", border: "1px solid var(--beige-200)", textAlign: "center" }}>
                         <div style={{ fontSize: "10px", color: "var(--beige-700)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>Por mês</div>
-                        <div style={{ fontSize: "15px", fontFamily: "var(--font-serif)", color: "var(--burgundy-700)" }}>{formatCurrency(monthlyNeeded, { decimals: 0 })}</div>
+                        <div style={{ fontSize: "15px", fontFamily: "var(--font-serif)", color: "var(--burgundy-700)" }}>{monthlyNeeded}€</div>
                       </div>
                     )}
                   </div>
@@ -493,9 +489,9 @@ const SavingsGoals = () => {
 
                 {/* Botões — sempre visíveis para permitir adicionar além da meta */}
                 <div className="goal-actions">
-                  <button onClick={() => handleUpdateSaved(goal.id, 5)}   className="btn btn-secondary btn-small">+{formatCurrency(5, { decimals: 0 })}</button>
-                  <button onClick={() => handleUpdateSaved(goal.id, 10)}  className="btn btn-secondary btn-small">+{formatCurrency(10, { decimals: 0 })}</button>
-                  <button onClick={() => handleUpdateSaved(goal.id, 20)}  className="btn btn-secondary btn-small">+{formatCurrency(20, { decimals: 0 })}</button>
+                  <button onClick={() => handleUpdateSaved(goal.id, 5)}   className="btn btn-secondary btn-small">+5€</button>
+                  <button onClick={() => handleUpdateSaved(goal.id, 10)}  className="btn btn-secondary btn-small">+10€</button>
+                  <button onClick={() => handleUpdateSaved(goal.id, 20)}  className="btn btn-secondary btn-small">+20€</button>
                   <button onClick={() => handleCustomAmount(goal.id)}     className="btn btn-primary btn-small">Outro…</button>
                 </div>
               </div>

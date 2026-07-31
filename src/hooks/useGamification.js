@@ -1,13 +1,13 @@
 import { useMemo } from "react";
 
-export const getAchievements = (symbol = "€") => [
+export const ACHIEVEMENTS = [
   { id:"first_transaction", icon:"🌱", title:"Primeiro Passo",        description:"Registou a primeira transação",               check:(tx)=>tx.length>=1 },
   { id:"ten_transactions",  icon:"📊", title:"Em Ritmo",              description:"10 transações registadas",                    check:(tx)=>tx.length>=10 },
   { id:"fifty_transactions",icon:"🏃", title:"Consistente",           description:"50 transações registadas",                    check:(tx)=>tx.length>=50 },
   { id:"first_positive_month",icon:"✨",title:"Mês Verde",            description:"Primeiro mês com saldo positivo",             check:(tx)=>hasPositiveMonth(tx) },
   { id:"three_positive_months",icon:"🌿",title:"Tendência Positiva",  description:"3 meses consecutivos positivos",              check:(tx)=>countConsecutivePositiveMonths(tx)>=3 },
-  { id:"saved_500",         icon:"💰", title:"Poupador",              description:`Poupou 500${symbol} num mês`,                 check:(tx)=>hasMonthlySaving(tx,500) },
-  { id:"saved_1000",        icon:"💎", title:"Milhar",                description:`Poupou 1000${symbol} num mês`,                check:(tx)=>hasMonthlySaving(tx,1000) },
+  { id:"saved_500",         icon:"💰", title:"Poupador",              description:"Poupou 500€ num mês",                         check:(tx)=>hasMonthlySaving(tx,500) },
+  { id:"saved_1000",        icon:"💎", title:"Milhar",                description:"Poupou 1000€ num mês",                        check:(tx)=>hasMonthlySaving(tx,1000) },
   { id:"first_goal",        icon:"🎯", title:"Com Objetivos",         description:"Criou a primeira meta de poupança",           check:(_,__,g)=>g.length>=1 },
   { id:"goal_completed",    icon:"🏆", title:"Meta Atingida",         description:"Completou uma meta de poupança",              check:(_,__,g)=>g.some(x=>x.saved>=x.target) },
   { id:"goal_exceeded",     icon:"🚀", title:"Além da Meta",          description:"Poupou mais do que o objetivo numa meta",     check:(_,__,g)=>g.some(x=>x.saved>x.target) },
@@ -18,7 +18,7 @@ export const getAchievements = (symbol = "€") => [
   { id:"savings_rate_30",   icon:"📈", title:"Taxa de Elite",         description:"Taxa de poupança acima de 30% num mês",       check:(tx)=>hasSavingsRate(tx,0.30) },
 ];
 
-export const generateChallenges = (transactions, categories, selectedDate, symbol = "€") => {
+export const generateChallenges = (transactions, categories, selectedDate) => {
   const { month, year } = selectedDate;
   const monthTx = transactions.filter(t=>{const d=new Date(t.date);return d.getMonth()===month&&d.getFullYear()===year;});
   const prevMonth = month===0?11:month-1;
@@ -37,8 +37,8 @@ export const generateChallenges = (transactions, categories, selectedDate, symbo
   const savingsTarget = income>0 ? Math.round(income*0.2) : 200;
   challenges.push({
     id:"save_20pct", icon:"💰", title:"Regra dos 20%",
-    description:`Poupa pelo menos ${savingsTarget}${symbol} este mês`,
-    target:savingsTarget, current:Math.max(0,income-expenses), unit:symbol, type:"progress",
+    description:`Poupa pelo menos ${savingsTarget}€ este mês`,
+    target:savingsTarget, current:Math.max(0,income-expenses), unit:"€", type:"progress",
   });
 
   // 3. Reduzir categoria top
@@ -50,9 +50,9 @@ export const generateChallenges = (transactions, categories, selectedDate, symbo
     const target = Math.round(prevSpent*0.9);
     if (prevSpent>0) challenges.push({
       id:`reduce_${topCatId}`, icon:topCat.icon, title:`Reduzir ${topCat.name}`,
-      description:`Gasta menos de ${target}${symbol} (−10% vs mês anterior)`,
+      description:`Gasta menos de ${target}€ (−10% vs mês anterior)`,
       target, current:target-currSpent, currentRaw:currSpent, prevRaw:prevSpent,
-      unit:symbol, type:"reduce", color:topCat.color,
+      unit:"€", type:"reduce", color:topCat.color,
     });
   }
 
@@ -123,16 +123,15 @@ export const calculateStreak = (transactions) => {
   return streak;
 };
 
-const useGamification = (transactions, categories, goals, selectedDate, currencySymbol = "€") => {
+const useGamification = (transactions, categories, goals, selectedDate) => {
   return useMemo(()=>{
     const streak = calculateStreak(transactions);
-    const achievementDefs = getAchievements(currencySymbol);
-    const unlockedIds = new Set(achievementDefs.filter(a=>a.check(transactions,categories,goals)).map(a=>a.id));
-    const achievements = achievementDefs.map(a=>({...a, unlocked:unlockedIds.has(a.id)}));
+    const unlockedIds = new Set(ACHIEVEMENTS.filter(a=>a.check(transactions,categories,goals)).map(a=>a.id));
+    const achievements = ACHIEVEMENTS.map(a=>({...a, unlocked:unlockedIds.has(a.id)}));
     const { score, breakdown } = calculateScore(transactions,categories,selectedDate);
-    const challenges = generateChallenges(transactions,categories,selectedDate,currencySymbol);
+    const challenges = generateChallenges(transactions,categories,selectedDate);
     return { streak, achievements, score, breakdown, challenges };
-  }, [transactions, categories, goals, selectedDate, currencySymbol]);
+  }, [transactions, categories, goals, selectedDate]);
 };
 
 export default useGamification;

@@ -1,8 +1,4 @@
-import { useState, useEffect } from "react";
-import { supabase } from "../lib/supabaseClient";
-import useGamification from "../hooks/useGamification";
-import { useCurrency } from "../contexts/CurrencyContext";
-import { CURRENCIES } from "../lib/currency";
+import { useState } from "react";
 
 /* ── Mensagens simpáticas ao sair — mudam consoante a hora, só por diversão ── */
 const getSignOutMessage = () => {
@@ -34,95 +30,14 @@ const SignOutConfirm = ({ onConfirm, onCancel }) => (
 
 /*
   stats (opcional) — passa de App.jsx algo como:
-  { transactionsCount, categoriesCount, memberSince }
-  transactions / categories — passa também de App.jsx; usados para calcular
-  streak, score e conquistas através do useGamification.
+  { transactionsCount, categoriesCount, streak, memberSince }
+  Se não passares nada, a secção de estatísticas simplesmente não aparece.
 */
-const Account = ({ user, onSignOut, stats, transactions = [], categories = [] }) => {
+const Account = ({ user, onSignOut, stats }) => {
   const [confirmingSignOut, setConfirmingSignOut] = useState(false);
-  const { currency, setCurrency, symbol, formatCurrency } = useCurrency();
-
-  /* ── Nome editável ── */
-  const displayName = (user?.user_metadata?.full_name || "").trim();
-  const [isEditingName, setIsEditingName] = useState(false);
-  const [nameInput, setNameInput] = useState(displayName);
-  const [savingName, setSavingName] = useState(false);
-  const [nameError, setNameError] = useState("");
-
-  const handleStartEditName = () => {
-    setNameInput(displayName);
-    setNameError("");
-    setIsEditingName(true);
-  };
-
-  const handleSaveName = async (e) => {
-    e.preventDefault();
-    if (!nameInput.trim()) { setNameError("O nome não pode ficar vazio"); return; }
-    setSavingName(true); setNameError("");
-    const { error } = await supabase.auth.updateUser({ data: { full_name: nameInput.trim() } });
-    setSavingName(false);
-    if (error) { setNameError("Não foi possível guardar. Tenta novamente."); return; }
-    setIsEditingName(false);
-  };
-
-  /* ── Metas de poupança (para as estatísticas e gamificação) ── */
-  const [goals, setGoals] = useState([]);
-  const [goalsLoading, setGoalsLoading] = useState(true);
-
-  useEffect(() => {
-    if (!user) { setGoals([]); setGoalsLoading(false); return; }
-    setGoalsLoading(true);
-    supabase.from("savings_goals").select("*").eq("user_id", user.id)
-      .then(({ data, error }) => {
-        if (!error) {
-          setGoals((data || []).map(g => ({
-            id: g.id, name: g.name, target: Number(g.target), saved: Number(g.saved), deadline: g.deadline,
-          })));
-        }
-        setGoalsLoading(false);
-      });
-  }, [user]);
-
-  const now = new Date();
-  const selectedDate = { month: now.getMonth(), year: now.getFullYear() };
-  const { streak, achievements, score } = useGamification(transactions, categories, goals, selectedDate, symbol);
-  const unlockedAchievements = achievements.filter(a => a.unlocked);
-
-  const totalSaved = goals.reduce((s, g) => s + g.saved, 0);
-  const totalTarget = goals.reduce((s, g) => s + g.target, 0);
-  const completedGoals = goals.filter(g => g.saved >= g.target).length;
-
-  /* ── Preferências de notificação (guardadas no user_metadata do Supabase) ── */
-  const [weeklyDigest, setWeeklyDigest] = useState(user?.user_metadata?.pref_weekly_digest ?? true);
-  const [budgetAlerts, setBudgetAlerts] = useState(user?.user_metadata?.pref_budget_alerts ?? true);
-  const [prefsSaved, setPrefsSaved] = useState(false);
-
-  const savePreferences = async (updates) => {
-    setPrefsSaved(false);
-    const { error } = await supabase.auth.updateUser({ data: updates });
-    if (!error) { setPrefsSaved(true); setTimeout(() => setPrefsSaved(false), 2000); }
-  };
-
-  const handleCurrencyChange = async (code) => {
-    await setCurrency(code);
-    setPrefsSaved(true);
-    setTimeout(() => setPrefsSaved(false), 2000);
-  };
-
-  const handleToggleDigest = () => {
-    const next = !weeklyDigest;
-    setWeeklyDigest(next);
-    savePreferences({ pref_weekly_digest: next });
-  };
-
-  const handleToggleBudgetAlerts = () => {
-    const next = !budgetAlerts;
-    setBudgetAlerts(next);
-    savePreferences({ pref_budget_alerts: next });
-  };
 
   const email = user?.email ?? "";
-  const initials = displayName ? displayName[0].toUpperCase() : email ? email[0].toUpperCase() : "?";
+  const initials = email ? email[0].toUpperCase() : "?";
 
   const memberSince = stats?.memberSince || user?.created_at
     ? new Date(stats?.memberSince || user.created_at).toLocaleDateString("pt-PT", {
@@ -130,169 +45,45 @@ const Account = ({ user, onSignOut, stats, transactions = [], categories = [] })
       })
     : null;
 
-  const emailConfirmed = Boolean(user?.email_confirmed_at || user?.confirmed_at);
-
   return (
     <section className="section">
       <h2 className="section-title" style={{ marginBottom: "20px" }}>Minha Conta</h2>
 
       <div className="card account-profile-card">
         <div className="account-avatar">{initials}</div>
-        <div className="account-info" style={{ flex: 1, minWidth: 0 }}>
-          {!isEditingName ? (
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-              <div style={{ fontFamily: "var(--font-serif)", fontSize: "17px", fontWeight: 500, color: "var(--burgundy-900)" }}>
-                {displayName || "Sem nome definido"}
-              </div>
-              <button onClick={handleStartEditName} title="Editar nome" style={{
-                background: "none", border: "none", cursor: "pointer", fontSize: "14px",
-                color: "var(--beige-600)", padding: "2px 4px", borderRadius: "4px",
-              }}>
-                ✎
-              </button>
-            </div>
-          ) : (
-            <form onSubmit={handleSaveName} style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
-              <input
-                type="text"
-                value={nameInput}
-                onChange={e => setNameInput(e.target.value)}
-                className="form-input"
-                style={{ maxWidth: "220px", minHeight: "38px", padding: "8px 12px" }}
-                autoFocus
-              />
-              <button type="submit" className="btn btn-primary btn-small" disabled={savingName}>
-                {savingName ? "..." : "Guardar"}
-              </button>
-              <button type="button" onClick={() => setIsEditingName(false)} className="btn btn-secondary btn-small">
-                Cancelar
-              </button>
-            </form>
-          )}
-          {nameError && <p style={{ fontSize: "12px", color: "var(--error)", marginTop: "4px" }}>{nameError}</p>}
-          <div className="account-email" style={{ marginTop: "4px" }}>{email}</div>
+        <div className="account-info">
+          <div className="account-email">{email}</div>
           {memberSince && (
             <div className="account-member-since">Conta criada a {memberSince}</div>
           )}
         </div>
       </div>
 
-      {!emailConfirmed && (
-        <div className="card" style={{ marginTop: "12px", background: "var(--warning-light)", borderColor: "var(--warning)" }}>
-          <p style={{ fontSize: "13px", color: "var(--burgundy-900)" }}>
-            ✉️ <strong>Email por confirmar.</strong> Verifica a tua caixa de entrada e clica no link de confirmação.
-          </p>
-        </div>
-      )}
-
-      {/* Estatísticas base */}
-      <div className="stats-compact" style={{ marginTop: "16px" }}>
-        {typeof stats?.transactionsCount === "number" && (
-          <div className="stat-compact">
-            <div className="stat-compact-header"><span className="stat-compact-label">Transações</span></div>
-            <div className="stat-compact-value">{stats.transactionsCount}</div>
-            <div className="stat-compact-detail">registadas no total</div>
-          </div>
-        )}
-        {typeof stats?.categoriesCount === "number" && (
-          <div className="stat-compact">
-            <div className="stat-compact-header"><span className="stat-compact-label">Categorias</span></div>
-            <div className="stat-compact-value">{stats.categoriesCount}</div>
-            <div className="stat-compact-detail">criadas por ti</div>
-          </div>
-        )}
-        <div className="stat-compact">
-          <div className="stat-compact-header"><span className="stat-compact-label">Streak atual</span></div>
-          <div className="stat-compact-value">{streak} {streak === 1 ? "dia" : "dias"}</div>
-          <div className="stat-compact-detail">a registar sem parar</div>
-        </div>
-        <div className="stat-compact">
-          <div className="stat-compact-header"><span className="stat-compact-label">Score do mês</span></div>
-          <div className="stat-compact-value positive">{score}/100</div>
-          <div className="stat-compact-detail">saúde financeira</div>
-        </div>
-      </div>
-
-      {/* Estatísticas de metas de poupança */}
-      {!goalsLoading && goals.length > 0 && (
-        <div className="stats-compact" style={{ marginTop: "12px" }}>
-          <div className="stat-compact">
-            <div className="stat-compact-header"><span className="stat-compact-label">Poupança total</span></div>
-            <div className="stat-compact-value positive">{formatCurrency(totalSaved, { decimals: 0 })}</div>
-            <div className="stat-compact-detail">em {goals.length} meta{goals.length > 1 ? "s" : ""}</div>
-          </div>
-          <div className="stat-compact">
-            <div className="stat-compact-header"><span className="stat-compact-label">Metas concluídas</span></div>
-            <div className="stat-compact-value">{completedGoals}/{goals.length}</div>
-            <div className="stat-compact-detail">
-              {totalTarget > 0 ? `${((totalSaved / totalTarget) * 100).toFixed(0)}% do objetivo total` : "\u00A0"}
+      {stats && (
+        <div className="stats-compact" style={{ marginTop: "16px" }}>
+          {typeof stats.transactionsCount === "number" && (
+            <div className="stat-compact">
+              <div className="stat-compact-header"><span className="stat-compact-label">Transações</span></div>
+              <div className="stat-compact-value">{stats.transactionsCount}</div>
+              <div className="stat-compact-detail">registadas no total</div>
             </div>
-          </div>
+          )}
+          {typeof stats.categoriesCount === "number" && (
+            <div className="stat-compact">
+              <div className="stat-compact-header"><span className="stat-compact-label">Categorias</span></div>
+              <div className="stat-compact-value">{stats.categoriesCount}</div>
+              <div className="stat-compact-detail">criadas por ti</div>
+            </div>
+          )}
+          {typeof stats.streak === "number" && (
+            <div className="stat-compact">
+              <div className="stat-compact-header"><span className="stat-compact-label">Streak atual</span></div>
+              <div className="stat-compact-value">{stats.streak} {stats.streak === 1 ? "dia" : "dias"}</div>
+              <div className="stat-compact-detail">a registar sem parar</div>
+            </div>
+          )}
         </div>
       )}
-
-      {/* Conquistas */}
-      <div className="card" style={{ marginTop: "16px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-          <h3 className="section-title" style={{ fontSize: "16px", margin: 0 }}>Conquistas</h3>
-          <span style={{ fontSize: "12px", color: "var(--beige-700)", fontWeight: 500 }}>
-            {unlockedAchievements.length}/{achievements.length}
-          </span>
-        </div>
-        {unlockedAchievements.length === 0 ? (
-          <p style={{ fontSize: "13px", color: "var(--beige-600)" }}>
-            Regista transações e cria metas para desbloqueares as tuas primeiras conquistas.
-          </p>
-        ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(76px, 1fr))", gap: "8px" }}>
-            {unlockedAchievements.map(a => (
-              <div key={a.id} title={`${a.title}: ${a.description}`} style={{
-                display: "flex", flexDirection: "column", alignItems: "center", gap: "4px",
-                padding: "10px 6px", background: "white", border: "1px solid var(--beige-300)",
-                borderRadius: "10px",
-              }}>
-                <span style={{ fontSize: "24px" }}>{a.icon}</span>
-                <span style={{ fontSize: "10px", fontWeight: 600, color: "var(--burgundy-800)", textAlign: "center", lineHeight: 1.3 }}>
-                  {a.title}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Preferências */}
-      <div className="card" style={{ marginTop: "16px" }}>
-        <h3 className="section-title" style={{ fontSize: "16px", marginBottom: "4px" }}>Preferências</h3>
-        <p style={{ fontSize: "12px", color: "var(--beige-600)", marginBottom: "16px" }}>
-          Ficam guardadas na tua conta.
-        </p>
-
-        <div className="form-group">
-          <label className="form-label">Moeda</label>
-          <select
-            value={currency}
-            onChange={e => handleCurrencyChange(e.target.value)}
-            className="form-select"
-            style={{ maxWidth: "280px" }}
-          >
-            {Object.entries(CURRENCIES).map(([code, c]) => <option key={code} value={code}>{c.label}</option>)}
-          </select>
-        </div>
-
-        <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "6px" }}>
-          <label style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13px", color: "var(--burgundy-900)", cursor: "pointer" }}>
-            <input type="checkbox" checked={weeklyDigest} onChange={handleToggleDigest} style={{ width: "18px", height: "18px" }} />
-            Resumo semanal por email
-          </label>
-          <label style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13px", color: "var(--burgundy-900)", cursor: "pointer" }}>
-            <input type="checkbox" checked={budgetAlerts} onChange={handleToggleBudgetAlerts} style={{ width: "18px", height: "18px" }} />
-            Avisar quando exceder orçamento
-          </label>
-        </div>
-
-        {prefsSaved && <p style={{ fontSize: "12px", color: "var(--success)", marginTop: "10px" }}>✓ Preferências guardadas</p>}
-      </div>
 
       <div className="card" style={{ marginTop: "16px" }}>
         <h3 className="section-title" style={{ fontSize: "16px", marginBottom: "12px" }}>Sessão</h3>

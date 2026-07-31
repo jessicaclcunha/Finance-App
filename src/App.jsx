@@ -11,10 +11,9 @@ import RecurringTransactions from "./components/RecurringTransactions";
 import BudgetAlerts from "./components/BudgetAlerts";
 import AnalysisView from "./components/AnalysisView";
 import AnnualView from "./components/AnnualView";
-import Auth, { EmailConfirmationPending } from "./components/Auth";
+import Auth from "./components/Auth";
 import useRecurringInjector from "./hooks/useRecurringInjector";
 import { CategoriesContext, CategoriesProvider } from "./contexts/CategoriesContext";
-import { CurrencyProvider } from "./contexts/CurrencyContext";
 import Account from "./components/Account";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { supabase } from "./lib/supabaseClient";
@@ -27,7 +26,7 @@ const AppWrapper = () => (
 );
 
 const AuthGate = () => {
-  const { user, loading, signOut, resendConfirmation } = useAuth();
+  const { user, loading } = useAuth();
 
   if (loading) {
     return (
@@ -39,23 +38,9 @@ const AuthGate = () => {
 
   if (!user) return <Auth />;
 
-  // Conta autenticada mas email ainda por confirmar: bloqueia o acesso à app
-  const emailConfirmed = Boolean(user.email_confirmed_at || user.confirmed_at);
-  if (!emailConfirmed) {
-    return (
-      <EmailConfirmationPending
-        email={user.email}
-        onResend={resendConfirmation}
-        onSignOut={signOut}
-      />
-    );
-  }
-
   return (
     <CategoriesProvider>
-      <CurrencyProvider>
-        <App />
-      </CurrencyProvider>
+      <App />
     </CategoriesProvider>
   );
 };
@@ -180,8 +165,6 @@ function App() {
           <Account
             user={user}
             onSignOut={signOut}
-            transactions={transactions}
-            categories={categories}
             stats={{
               transactionsCount: transactions.length,
               categoriesCount: categories.length,

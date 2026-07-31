@@ -31,108 +31,36 @@ const GoogleIcon = () => (
   </svg>
 );
 
-/* ── Ecrã de confirmação de email pendente ──
-   Exportado para poder ser reutilizado no App.jsx quando um utilizador
-   com sessão ativa ainda não confirmou o email. */
-export const EmailConfirmationPending = ({ email, onResend, onBack, onSignOut }) => {
-  const [resendState, setResendState] = useState("idle"); // idle | sending | sent | error
-
-  const handleResend = async () => {
-    setResendState("sending");
-    const { error } = await onResend(email);
-    setResendState(error ? "error" : "sent");
-  };
-
-  return (
-    <div className="auth-page">
-      <div className="auth-card" style={{ textAlign: "center" }}>
-        <div className="auth-logo-mark">
-          <LogoMark />
-          <div className="auth-wordmark">PureProsper</div>
-        </div>
-
-        <div style={{ fontSize: "44px", margin: "18px 0 12px" }}>✉️</div>
-
-        <p style={{ fontFamily: "var(--font-serif)", fontSize: "19px", color: "var(--burgundy-900)", marginBottom: "10px" }}>
-          Confirma o teu email
-        </p>
-        <p style={{ fontSize: "13px", color: "var(--beige-700)", marginBottom: "6px" }}>
-          Enviámos um link de confirmação para
-        </p>
-        <p style={{ fontSize: "14px", fontWeight: 600, color: "var(--burgundy-800)", marginBottom: "20px", wordBreak: "break-all" }}>
-          {email}
-        </p>
-        <p style={{ fontSize: "12px", color: "var(--beige-600)", marginBottom: "22px" }}>
-          Clica no link do email para ativar a tua conta. Se não vires nada na caixa de entrada, verifica o spam.
-        </p>
-
-        <button onClick={handleResend} className="btn btn-secondary" style={{ width: "100%", marginBottom: "10px" }} disabled={resendState === "sending"}>
-          {resendState === "sending" ? "A enviar..." : "Reenviar email"}
-        </button>
-
-        {resendState === "sent" && (
-          <p style={{ fontSize: "12px", color: "var(--success)", marginBottom: "10px" }}>✓ Email reenviado</p>
-        )}
-        {resendState === "error" && (
-          <p style={{ fontSize: "12px", color: "var(--error)", marginBottom: "10px" }}>Não foi possível reenviar. Tenta mais tarde.</p>
-        )}
-
-        {onSignOut && (
-          <button
-            onClick={onSignOut}
-            className="btn btn-secondary"
-            style={{ width: "100%", background: "transparent", border: "none", color: "var(--beige-700)" }}
-          >
-            Terminar sessão
-          </button>
-        )}
-        {onBack && (
-          <button
-            onClick={onBack}
-            className="btn btn-secondary"
-            style={{ width: "100%", background: "transparent", border: "none", color: "var(--beige-700)" }}
-          >
-            ← Voltar
-          </button>
-        )}
-      </div>
-    </div>
-  );
-};
-
 const Auth = () => {
-  const { signIn, signUp, signInWithGoogle, resendConfirmation } = useAuth();
+  const { signIn, signUp, signInWithGoogle } = useAuth();
   const [mode, setMode] = useState("login"); // "login" | "signup"
-  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [info, setInfo] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [pendingEmail, setPendingEmail] = useState(null);
 
   const switchMode = (newMode) => {
     if (newMode === mode) return;
     setMode(newMode);
     setError("");
+    setInfo("");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(""); setLoading(true);
+    setError(""); setInfo(""); setLoading(true);
 
     const { error } = mode === "login"
       ? await signIn(email, password)
-      : await signUp(email, password, name.trim());
+      : await signUp(email, password);
 
     setLoading(false);
-
     if (error) {
       setError(error.message);
-      return;
-    }
-    if (mode === "signup") {
-      setPendingEmail(email);
+    } else if (mode === "signup") {
+      setInfo("Conta criada! Verifica o teu email para confirmar.");
     }
   };
 
@@ -141,16 +69,6 @@ const Auth = () => {
     const { error } = await signInWithGoogle();
     if (error) { setError(error.message); setGoogleLoading(false); }
   };
-
-  if (pendingEmail) {
-    return (
-      <EmailConfirmationPending
-        email={pendingEmail}
-        onResend={resendConfirmation}
-        onBack={() => { setPendingEmail(null); setMode("login"); setPassword(""); }}
-      />
-    );
-  }
 
   return (
     <div className="auth-page">
@@ -186,6 +104,7 @@ const Auth = () => {
         </div>
 
         {error && <div className="auth-alert error">{error}</div>}
+        {info && <div className="auth-alert info">{info}</div>}
 
         <button
           type="button"
@@ -200,21 +119,6 @@ const Auth = () => {
         <div className="auth-divider"><span>ou com email</span></div>
 
         <form onSubmit={handleSubmit}>
-          {mode === "signup" && (
-            <div className="form-group">
-              <label className="form-label">Nome</label>
-              <input
-                type="text"
-                className="form-input"
-                value={name}
-                onChange={e => setName(e.target.value)}
-                placeholder="O teu nome"
-                required
-                autoFocus
-              />
-            </div>
-          )}
-
           <div className="form-group">
             <label className="form-label">Email</label>
             <input
@@ -224,7 +128,7 @@ const Auth = () => {
               onChange={e => setEmail(e.target.value)}
               placeholder="tu@exemplo.com"
               required
-              autoFocus={mode === "login"}
+              autoFocus
             />
           </div>
           <div className="form-group">
@@ -248,7 +152,7 @@ const Auth = () => {
         <p className="auth-footer-note">
           {mode === "login"
             ? "Os teus dados ficam guardados de forma segura e privada."
-            : "Vamos pedir-te para confirmares o email antes de entrares."}
+            : "Ao criar conta, os teus dados passam a sincronizar entre dispositivos."}
         </p>
       </div>
     </div>

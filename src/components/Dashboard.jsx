@@ -1,8 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { useCurrency } from "../contexts/CurrencyContext";
 
-const AnimatedCounter = ({ value, showSign = false, decimals = 2 }) => {
-  const { formatCurrency } = useCurrency();
+const AnimatedCounter = ({ value, prefix = "", suffix = "€", decimals = 2 }) => {
   const [displayed, setDisplayed] = useState(value);
   const prevRef = useRef(value);
   const rafRef = useRef(null);
@@ -30,7 +28,11 @@ const AnimatedCounter = ({ value, showSign = false, decimals = 2 }) => {
     return () => cancelAnimationFrame(rafRef.current);
   }, [value]);
 
-  return <span>{formatCurrency(displayed, { decimals, showSign })}</span>;
+  const formatted = displayed >= 0
+    ? `${prefix}${displayed.toFixed(decimals)}${suffix}`
+    : `${prefix.replace("+", "")}${displayed.toFixed(decimals)}${suffix}`;
+
+  return <span>{formatted}</span>;
 };
 
 const Dashboard = ({ transactions }) => {
@@ -64,7 +66,12 @@ const Dashboard = ({ transactions }) => {
               Saldo do Mês
             </div>
             <div className={`balance-amount-main ${balance >= 0 ? 'positive' : 'negative'}`}>
-              <AnimatedCounter value={balance} showSign decimals={2} />
+              <AnimatedCounter
+                value={balance}
+                prefix={balance >= 0 ? '+' : ''}
+                suffix="€"
+                decimals={2}
+              />
             </div>
           </div>
         </div>
@@ -76,7 +83,7 @@ const Dashboard = ({ transactions }) => {
             <span className="stat-compact-label">Receitas</span>
           </div>
           <div className="stat-compact-value positive">
-            <AnimatedCounter value={income} showSign decimals={2} />
+            <AnimatedCounter value={income} prefix="+" suffix="€" decimals={2} />
           </div>
           <div className="stat-compact-detail">
             {transactions.filter(t => t.type === "income").length} entradas
@@ -88,7 +95,7 @@ const Dashboard = ({ transactions }) => {
             <span className="stat-compact-label">Despesas</span>
           </div>
           <div className="stat-compact-value negative">
-            <AnimatedCounter value={-expenses} showSign decimals={2} />
+            <AnimatedCounter value={expenses} prefix="−" suffix="€" decimals={2} />
           </div>
           <div className="stat-compact-detail">
             {transactions.filter(t => t.type === "expense").length} saídas
