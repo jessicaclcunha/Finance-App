@@ -1,4 +1,7 @@
+import { useCurrency } from "../contexts/CurrencyContext";
+
 const MonthInsights = ({ transactions, selectedDate }) => {
+    const { formatCurrency } = useCurrency();
     const today = new Date();
     const currentMonth = selectedDate.month;
     const currentYear = selectedDate.year;
@@ -54,7 +57,7 @@ const MonthInsights = ({ transactions, selectedDate }) => {
             <div className="widget-card">
               <div className="widget-content">
                 <div className="widget-label">Média Diária</div>
-                <div className="widget-value">{dailyAverage.toFixed(2)}€</div>
+                <div className="widget-value">{formatCurrency(dailyAverage, { decimals: 2 })}</div>
                 <div className="widget-detail">Gasto por dia</div>
               </div>
             </div>
@@ -65,7 +68,7 @@ const MonthInsights = ({ transactions, selectedDate }) => {
                 <div className="widget-value" style={{ 
                   color: dailyBudget < 0 ? 'var(--error)' : 'var(--success)' 
                 }}>
-                  {dailyBudget.toFixed(2)}€
+                  {formatCurrency(dailyBudget, { decimals: 2 })}
                 </div>
                 <div className="widget-detail">Disponível por dia</div>
               </div>
@@ -74,7 +77,7 @@ const MonthInsights = ({ transactions, selectedDate }) => {
             <div className="widget-card">
               <div className="widget-content">
                 <div className="widget-label">Projeção</div>
-                <div className="widget-value">{projectedExpenses.toFixed(2)}€</div>
+                <div className="widget-value">{formatCurrency(projectedExpenses, { decimals: 2 })}</div>
                 <div className="widget-detail">Gasto estimado total</div>
               </div>
             </div>
@@ -100,7 +103,7 @@ const MonthInsights = ({ transactions, selectedDate }) => {
                       })}
                     </div>
                   </div>
-                  <div className="expense-amount">{transaction.amount.toFixed(2)}€</div>
+                  <div className="expense-amount">{formatCurrency(transaction.amount, { decimals: 2 })}</div>
                 </div>
               ))}
             </div>

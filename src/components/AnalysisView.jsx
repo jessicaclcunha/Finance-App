@@ -5,6 +5,7 @@ import {
   PointElement, LineElement, Tooltip, Legend, Filler
 } from "chart.js";
 import AnnualView from "./AnnualView";
+import { useCurrency } from "../contexts/CurrencyContext";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Tooltip, Legend, Filler);
 
@@ -14,6 +15,7 @@ const getMonthTx = (tx, month, year) =>
 
 /* ── Previsão fim do mês ── */
 const ForecastSection = ({ transactions, selectedDate }) => {
+  const { formatCurrency } = useCurrency();
   const { month, year } = selectedDate;
   const today = new Date();
   const isCurrentMonth = today.getMonth()===month && today.getFullYear()===year;
@@ -46,8 +48,8 @@ const ForecastSection = ({ transactions, selectedDate }) => {
   };
   const opts = {
     responsive:true, maintainAspectRatio:false,
-    plugins:{ legend:{position:"top",labels:{font:{size:11},usePointStyle:true}}, tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${(ctx.parsed.y||0).toFixed(2)}€`}} },
-    scales:{ x:{grid:{display:false},ticks:{font:{size:10},maxTicksLimit:10}}, y:{grid:{color:"var(--beige-200)"},ticks:{callback:v=>`${v}€`,font:{size:11}}} },
+    plugins:{ legend:{position:"top",labels:{font:{size:11},usePointStyle:true}}, tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${formatCurrency(ctx.parsed.y||0,{decimals:2})}`}} },
+    scales:{ x:{grid:{display:false},ticks:{font:{size:10},maxTicksLimit:10}}, y:{grid:{color:"var(--beige-200)"},ticks:{callback:v=>formatCurrency(v,{decimals:0}),font:{size:11}}} },
   };
 
   return (
@@ -56,25 +58,25 @@ const ForecastSection = ({ transactions, selectedDate }) => {
       <div className="stats-compact" style={{ marginBottom:"16px" }}>
         <div className="stat-compact">
           <div className="stat-compact-header"><span className="stat-compact-label">Gasto até hoje</span></div>
-          <div className="stat-compact-value negative">{expenses.toFixed(0)}€</div>
-          <div className="stat-compact-detail">{dailyAvg.toFixed(1)}€/dia</div>
+          <div className="stat-compact-value negative">{formatCurrency(expenses,{decimals:0})}</div>
+          <div className="stat-compact-detail">{dailyAvg.toFixed(1)}/dia</div>
         </div>
         <div className="stat-compact">
           <div className="stat-compact-header"><span className="stat-compact-label">Projeção fim do mês</span></div>
-          <div className="stat-compact-value">{projected.toFixed(0)}€</div>
+          <div className="stat-compact-value">{formatCurrency(projected,{decimals:0})}</div>
           <div className="stat-compact-detail">{isCurrentMonth ? `${daysLeft} dias restantes` : "Mês encerrado"}</div>
         </div>
       </div>
       <div className="stats-compact" style={{ marginBottom:"20px" }}>
         <div className="stat-compact">
           <div className="stat-compact-header"><span className="stat-compact-label">Receitas</span></div>
-          <div className="stat-compact-value positive">+{income.toFixed(0)}€</div>
+          <div className="stat-compact-value positive">{formatCurrency(income,{decimals:0,showSign:true})}</div>
           <div className="stat-compact-detail">&nbsp;</div>
         </div>
         <div className="stat-compact">
           <div className="stat-compact-header"><span className="stat-compact-label">Saldo previsto</span></div>
           <div className={`stat-compact-value ${projBalance >= 0 ? "positive" : "negative"}`}>
-            {projBalance >= 0 ? "+" : ""}{projBalance.toFixed(0)}€
+            {formatCurrency(projBalance,{decimals:0,showSign:true})}
           </div>
           <div className="stat-compact-detail">&nbsp;</div>
         </div>
@@ -91,6 +93,7 @@ const ForecastSection = ({ transactions, selectedDate }) => {
 
 /* ── Comparação por categoria ── */
 const CategoryComparison = ({ transactions, categories, selectedDate }) => {
+  const { formatCurrency } = useCurrency();
   const { month, year } = selectedDate;
   const curr = getMonthTx(transactions, month, year);
   const prev = getMonthTx(transactions, month===0?11:month-1, month===0?year-1:year);
@@ -117,8 +120,8 @@ const CategoryComparison = ({ transactions, categories, selectedDate }) => {
   };
   const opts = {
     responsive:true, maintainAspectRatio:false, indexAxis:"y",
-    plugins:{ legend:{position:"top",labels:{font:{size:11},usePointStyle:true}}, tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.x.toFixed(2)}€`}} },
-    scales:{ x:{grid:{color:"var(--beige-200)"},ticks:{callback:v=>`${v}€`,font:{size:11}}}, y:{grid:{display:false},ticks:{font:{size:11}}} },
+    plugins:{ legend:{position:"top",labels:{font:{size:11},usePointStyle:true}}, tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${formatCurrency(ctx.parsed.x,{decimals:2})}`}} },
+    scales:{ x:{grid:{color:"var(--beige-200)"},ticks:{callback:v=>formatCurrency(v,{decimals:0}),font:{size:11}}}, y:{grid:{display:false},ticks:{font:{size:11}}} },
   };
 
   return (
@@ -129,10 +132,10 @@ const CategoryComparison = ({ transactions, categories, selectedDate }) => {
           <div key={cat.id} style={{display:"flex",alignItems:"center",gap:"10px",padding:"10px 12px",background:"var(--beige-50)",border:"1px solid var(--beige-200)",borderRadius:"8px"}}>
             <div style={{flex:1,minWidth:0}}>
               <div style={{fontSize:"13px",fontWeight:500,color:"var(--burgundy-900)"}}>{cat.name}</div>
-              <div style={{fontSize:"11px",color:"var(--beige-600)"}}>Anterior: {cat.prevAmt>0?`${cat.prevAmt.toFixed(0)}€`:"—"}</div>
+              <div style={{fontSize:"11px",color:"var(--beige-600)"}}>Anterior: {cat.prevAmt>0?formatCurrency(cat.prevAmt,{decimals:0}):"—"}</div>
             </div>
             <div style={{textAlign:"right"}}>
-              <div style={{fontFamily:"var(--font-serif)",fontSize:"16px",fontWeight:500,color:"var(--burgundy-900)"}}>{cat.currAmt.toFixed(0)}€</div>
+              <div style={{fontFamily:"var(--font-serif)",fontSize:"16px",fontWeight:500,color:"var(--burgundy-900)"}}>{formatCurrency(cat.currAmt,{decimals:0})}</div>
               {cat.delta!==null && (
                 <div style={{fontSize:"11px",fontWeight:600,color:cat.delta>10?"var(--error)":cat.delta<-10?"var(--success)":"var(--beige-700)"}}>
                   {cat.delta>0?"+":""}{cat.delta.toFixed(0)}%{cat.delta>10?" ↑":cat.delta<-10?" ↓":" →"}
@@ -148,6 +151,7 @@ const CategoryComparison = ({ transactions, categories, selectedDate }) => {
 
 /* ── Padrões de gasto ── */
 const PatternsSection = ({ transactions, selectedDate }) => {
+  const { formatCurrency } = useCurrency();
   const { month, year } = selectedDate;
   const monthTx = getMonthTx(transactions, month, year).filter(t=>t.type==="expense");
   const byWeekday = Array(7).fill(0), byWeekdayCount = Array(7).fill(0);
@@ -168,12 +172,12 @@ const PatternsSection = ({ transactions, selectedDate }) => {
         <div className="stat-compact">
           <div className="stat-compact-header"><span className="stat-compact-label">Dia mais caro</span></div>
           <div className="stat-compact-value">{WEEKDAYS[topWeekday]}</div>
-          <div className="stat-compact-detail">{avgByWeekday[topWeekday].toFixed(0)}€ em média</div>
+          <div className="stat-compact-detail">{formatCurrency(avgByWeekday[topWeekday],{decimals:0})} em média</div>
         </div>
         <div className="stat-compact">
           <div className="stat-compact-header"><span className="stat-compact-label">Semana mais cara</span></div>
           <div className="stat-compact-value">{topWeek+1}ª semana</div>
-          <div className="stat-compact-detail">{byWeek[topWeek].toFixed(0)}€ gastos</div>
+          <div className="stat-compact-detail">{formatCurrency(byWeek[topWeek],{decimals:0})} gastos</div>
         </div>
       </div>
       <div>

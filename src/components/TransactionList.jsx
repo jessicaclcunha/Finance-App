@@ -1,6 +1,7 @@
 import { useState, useContext, useRef, useEffect } from "react";
 import TransactionForm from "./TransactionForm";
 import { CategoriesContext } from "../contexts/CategoriesContext";
+import { useCurrency } from "../contexts/CurrencyContext";
 
 const MONTH_NAMES = [
   "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
@@ -103,6 +104,7 @@ const SwipeableItem = ({ children, onRemove }) => {
 
 const TransactionList = ({ transactions, onAddTransaction, onDeleteTransaction, onEditTransaction }) => {
   const { categories } = useContext(CategoriesContext);
+  const { formatCurrency } = useCurrency();
   const [filter, setFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("date");
@@ -268,7 +270,10 @@ const TransactionList = ({ transactions, onAddTransaction, onDeleteTransaction, 
                         <div className="transaction-amount" style={{
                           color: transaction.type === "income" ? "var(--success)" : "var(--warning)",
                         }}>
-                          {transaction.type === "income" ? "+" : "−"}{transaction.amount.toFixed(2)}€
+                          {formatCurrency(
+                            transaction.type === "income" ? transaction.amount : -transaction.amount,
+                            { decimals: 2, showSign: true }
+                          )}
                         </div>
 
                         <div className="transaction-actions">
