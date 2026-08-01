@@ -228,7 +228,7 @@ const TransactionList = ({ transactions, onAddTransaction, onDeleteTransaction, 
 
             <div className="transaction-list">
               {group.transactions.map(transaction => {
-                const category = transaction.type === "expense"
+                const category = transaction.categoryId
                   ? getCategoryInfo(transaction.categoryId) : null;
 
                 return (
@@ -240,24 +240,24 @@ const TransactionList = ({ transactions, onAddTransaction, onDeleteTransaction, 
                           ? "3px solid var(--beige-400)" : undefined,
                       }}>
                         <div className="transaction-icon" style={{
-                          background: transaction.type === "income"
+                          background: category?.color
+                            ? `${category.color}20`
+                            : transaction.type === "income"
                             ? "rgba(107, 155, 107, 0.15)"
-                            : category?.color ? `${category.color}20`
                             : "rgba(212, 165, 116, 0.15)",
                         }}>
                           {transaction.isRecurring ? "🔄"
-                            : transaction.type === "income" ? "💰"
-                            : category ? category.icon : "📁"}
+                            : category ? category.icon
+                            : transaction.type === "income" ? "💰" : "📁"}
                         </div>
 
                         <div className="transaction-info">
                           <div className="transaction-description">{transaction.description}</div>
                           <div className="transaction-meta">
                             <span>{formatDate(transaction.date)}</span>
-                            {transaction.type === "expense" && category && (
+                            {category ? (
                               <><span>•</span><span>{category.name}</span></>
-                            )}
-                            {transaction.type === "income" && (
+                            ) : transaction.type === "income" && (
                               <><span>•</span><span>Receita</span></>
                             )}
                             {transaction.isRecurring && (

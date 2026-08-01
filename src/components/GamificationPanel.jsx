@@ -141,13 +141,47 @@ const StreakBadge = ({ streak }) => {
 };
 
 /* ── Conquistas ── */
+const AchievementCard = ({ a }) => (
+  <div style={{
+    display: "flex", alignItems: "center", gap: "12px",
+    padding: "12px 14px",
+    background: a.unlocked ? "white" : "var(--beige-100)",
+    border: `1px solid ${a.unlocked ? "var(--beige-300)" : "var(--beige-300)"}`,
+    borderRadius: "10px",
+    opacity: a.unlocked ? 1 : 0.7,
+    transition: "transform 0.2s, box-shadow 0.2s",
+  }}
+  onMouseEnter={e => { if (a.unlocked) { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "var(--shadow-md)"; } }}
+  onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
+  >
+    <span style={{
+      fontSize: "26px", lineHeight: 1, flexShrink: 0,
+      filter: a.unlocked ? "none" : "grayscale(1)",
+      opacity: a.unlocked ? 1 : 0.6,
+    }}>{a.icon}</span>
+    <div style={{ flex: 1, minWidth: 0 }}>
+      <div style={{
+        fontSize: "13px", fontWeight: 600,
+        color: a.unlocked ? "var(--burgundy-800)" : "var(--beige-700)",
+        display: "flex", alignItems: "center", gap: "6px",
+      }}>
+        {a.title}
+        {a.unlocked && <span style={{ color: "var(--success)", fontSize: "12px" }}>✓</span>}
+      </div>
+      <div style={{ fontSize: "12px", color: "var(--beige-600)", marginTop: "2px", lineHeight: 1.4 }}>
+        {a.description}
+      </div>
+    </div>
+  </div>
+);
+
 const AchievementsGrid = ({ achievements }) => {
   const unlocked = achievements.filter(a => a.unlocked);
   const locked = achievements.filter(a => !a.unlocked);
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
         <h4 style={{ fontFamily: "var(--font-serif)", fontSize: "16px", color: "var(--burgundy-700)", margin: 0 }}>
           Conquistas
         </h4>
@@ -156,40 +190,27 @@ const AchievementsGrid = ({ achievements }) => {
         </span>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(76px, 1fr))", gap: "8px" }}>
-        {unlocked.map(a => (
-          <div key={a.id} title={`${a.title}: ${a.description}`} style={{
-            display: "flex", flexDirection: "column", alignItems: "center",
-            gap: "4px", padding: "10px 6px",
-            background: "white", border: "1px solid var(--beige-300)",
-            borderRadius: "10px", cursor: "default",
-            transition: "transform 0.2s, box-shadow 0.2s",
-          }}
-          onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "var(--shadow-md)"; }}
-          onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
-          >
-            <span style={{ fontSize: "26px" }}>{a.icon}</span>
-            <span style={{ fontSize: "10px", fontWeight: 600, color: "var(--burgundy-800)", textAlign: "center", lineHeight: 1.3 }}>
-              {a.title}
-            </span>
+      {unlocked.length > 0 && (
+        <div style={{ marginBottom: "20px" }}>
+          <div style={{ fontSize: "11px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--beige-600)", marginBottom: "8px" }}>
+            Desbloqueadas
           </div>
-        ))}
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            {unlocked.map(a => <AchievementCard key={a.id} a={a} />)}
+          </div>
+        </div>
+      )}
 
-        {locked.slice(0, 4).map(a => (
-          <div key={a.id} title={a.description} style={{
-            display: "flex", flexDirection: "column", alignItems: "center",
-            gap: "4px", padding: "10px 6px",
-            background: "var(--beige-100)", border: "1px dashed var(--beige-300)",
-            borderRadius: "10px", opacity: 0.5, cursor: "default",
-            filter: "grayscale(1)",
-          }}>
-            <span style={{ fontSize: "26px" }}>{a.icon}</span>
-            <span style={{ fontSize: "10px", fontWeight: 500, color: "var(--beige-700)", textAlign: "center", lineHeight: 1.3 }}>
-              {a.title}
-            </span>
+      {locked.length > 0 && (
+        <div>
+          <div style={{ fontSize: "11px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--beige-600)", marginBottom: "8px" }}>
+            Por desbloquear
           </div>
-        ))}
-      </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            {locked.map(a => <AchievementCard key={a.id} a={a} />)}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -315,4 +336,5 @@ const GamificationPanel = ({ score, breakdown, streak, achievements, challenges 
   );
 };
 
+export { AchievementsGrid };
 export default GamificationPanel;

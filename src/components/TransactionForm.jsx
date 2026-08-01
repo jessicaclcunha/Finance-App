@@ -72,7 +72,7 @@ const TransactionForm = ({
       amount: parseFloat(form.amount),
       type: form.type,
       categoryId:
-        form.type === "expense" && availableCategories.length > 0
+        availableCategories.length > 0
           ? parseInt(form.categoryId)
           : null,
     };

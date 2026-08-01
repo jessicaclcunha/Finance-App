@@ -151,7 +151,7 @@ const RecurringTransactions = () => {
           {recurring.map(item => (
             <div key={item.id} className="recurring-item">
               <div className="recurring-toggle">
-                <input type="checkbox" checked={item.active} onChange={() => handleToggle(item.id)} className="recurring-checkbox" />
+                <input type="checkbox" checked={item.active} onChange={() => handleToggle(item.id)} className="form-checkbox" />
               </div>
               <div className="recurring-icon" style={{
                 background: item.type === "income" ? 'rgba(107, 155, 107, 0.15)' : 'rgba(212, 165, 116, 0.15)',

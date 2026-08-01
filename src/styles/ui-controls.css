@@ -296,3 +296,67 @@ input[type="date"].form-input {
   flex-shrink: 0;
   cursor: pointer;
 }
+
+/* ===== CUSTOM SELECT (uniforme entre browsers) ===== */
+.form-select,
+.sort-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238B3D3D' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 16px;
+  padding-right: 40px;
+}
+
+.form-select::-ms-expand,
+.sort-select::-ms-expand {
+  display: none;
+}
+
+/* ===== CUSTOM CHECKBOX (uniforme entre browsers) ===== */
+.form-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--beige-400);
+  border-radius: 5px;
+  background: white;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+  transition: all 0.2s;
+  vertical-align: middle;
+}
+
+.form-checkbox:hover {
+  border-color: var(--burgundy-400);
+}
+
+.form-checkbox:checked {
+  background: var(--burgundy-700);
+  border-color: var(--burgundy-700);
+}
+
+.form-checkbox:checked::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  width: 5px;
+  height: 9px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.form-checkbox:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--burgundy-100);
+}

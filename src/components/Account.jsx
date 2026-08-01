@@ -3,6 +3,7 @@ import { supabase } from "../lib/supabaseClient";
 import useGamification from "../hooks/useGamification";
 import { useCurrency } from "../contexts/CurrencyContext";
 import { CURRENCIES } from "../lib/currency";
+import GamificationPanel, { AchievementsGrid } from "./GamificationPanel";
 
 /* ── Mensagens simpáticas ao sair — mudam consoante a hora, só por diversão ── */
 const getSignOutMessage = () => {
@@ -86,7 +87,6 @@ const Account = ({ user, onSignOut, stats, transactions = [], categories = [] })
   const now = new Date();
   const selectedDate = { month: now.getMonth(), year: now.getFullYear() };
   const { streak, achievements, score } = useGamification(transactions, categories, goals, selectedDate, symbol);
-  const unlockedAchievements = achievements.filter(a => a.unlocked);
 
   const totalSaved = goals.reduce((s, g) => s + g.saved, 0);
   const totalTarget = goals.reduce((s, g) => s + g.target, 0);
@@ -233,32 +233,7 @@ const Account = ({ user, onSignOut, stats, transactions = [], categories = [] })
 
       {/* Conquistas */}
       <div className="card" style={{ marginTop: "16px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-          <h3 className="section-title" style={{ fontSize: "16px", margin: 0 }}>Conquistas</h3>
-          <span style={{ fontSize: "12px", color: "var(--beige-700)", fontWeight: 500 }}>
-            {unlockedAchievements.length}/{achievements.length}
-          </span>
-        </div>
-        {unlockedAchievements.length === 0 ? (
-          <p style={{ fontSize: "13px", color: "var(--beige-600)" }}>
-            Regista transações e cria metas para desbloqueares as tuas primeiras conquistas.
-          </p>
-        ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(76px, 1fr))", gap: "8px" }}>
-            {unlockedAchievements.map(a => (
-              <div key={a.id} title={`${a.title}: ${a.description}`} style={{
-                display: "flex", flexDirection: "column", alignItems: "center", gap: "4px",
-                padding: "10px 6px", background: "white", border: "1px solid var(--beige-300)",
-                borderRadius: "10px",
-              }}>
-                <span style={{ fontSize: "24px" }}>{a.icon}</span>
-                <span style={{ fontSize: "10px", fontWeight: 600, color: "var(--burgundy-800)", textAlign: "center", lineHeight: 1.3 }}>
-                  {a.title}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
+        <AchievementsGrid achievements={achievements} />
       </div>
 
       {/* Preferências */}
@@ -282,11 +257,11 @@ const Account = ({ user, onSignOut, stats, transactions = [], categories = [] })
 
         <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "6px" }}>
           <label style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13px", color: "var(--burgundy-900)", cursor: "pointer" }}>
-            <input type="checkbox" checked={weeklyDigest} onChange={handleToggleDigest} style={{ width: "18px", height: "18px" }} />
+            <input type="checkbox" checked={weeklyDigest} onChange={handleToggleDigest} className="form-checkbox"/>
             Resumo semanal por email
           </label>
           <label style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13px", color: "var(--burgundy-900)", cursor: "pointer" }}>
-            <input type="checkbox" checked={budgetAlerts} onChange={handleToggleBudgetAlerts} style={{ width: "18px", height: "18px" }} />
+            <input type="checkbox" checked={budgetAlerts} onChange={handleToggleBudgetAlerts} className="form-checkbox"/>
             Avisar quando exceder orçamento
           </label>
         </div>
