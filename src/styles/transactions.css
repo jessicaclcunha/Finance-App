@@ -127,8 +127,8 @@
 }
 
 .transaction-icon {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -161,14 +161,14 @@
   font-size: 12px;
   color: var(--beige-700);
   display: flex;
-  gap: 8px;
+  gap: 6px;
   align-items: center;
   flex-wrap: wrap;
 }
 
 .transaction-amount {
   font-family: var(--font-serif);
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 500;
   white-space: nowrap;
 }
@@ -204,11 +204,11 @@
   border: none;
   cursor: pointer;
   border-radius: 6px;
-  font-size: 16px;
+  font-size: 18px;
   line-height: 1;
   transition: all 0.2s;
-  min-width: 30px;
-  min-height: 30px;
+  min-width: 25px;
+  min-height: 25px;
   display: flex;
   align-items: center;
   justify-content: center;
