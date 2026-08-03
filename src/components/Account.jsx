@@ -257,10 +257,6 @@ const Account = ({ user, onSignOut, stats, transactions = [], categories = [] })
 
         <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "6px" }}>
           <label style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13px", color: "var(--burgundy-900)", cursor: "pointer" }}>
-            <input type="checkbox" checked={weeklyDigest} onChange={handleToggleDigest} className="form-checkbox"/>
-            Resumo semanal por email
-          </label>
-          <label style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13px", color: "var(--burgundy-900)", cursor: "pointer" }}>
             <input type="checkbox" checked={budgetAlerts} onChange={handleToggleBudgetAlerts} className="form-checkbox"/>
             Avisar quando exceder orçamento
           </label>

@@ -267,7 +267,7 @@
     position: fixed;
     top: 0;
     right: 0;
-    height: 100vh;
+    height: 100%;
     width: 280px;
     background: var(--burgundy-900);
     border-left: 1px solid var(--burgundy-700);
