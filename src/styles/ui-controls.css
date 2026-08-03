@@ -123,7 +123,8 @@ input[type="date"].form-input {
 }
 
 .form-input:focus,
-.form-select:focus {
+.form-select:focus,
+.sort-select:focus {
   outline: none;
   border-color: var(--burgundy-500);
   box-shadow: 0 0 0 3px var(--burgundy-100);

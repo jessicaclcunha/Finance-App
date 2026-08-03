@@ -184,7 +184,7 @@ const TransactionList = ({ transactions, onAddTransaction, onDeleteTransaction, 
         <input type="text" placeholder="🔍 Pesquisar transações..."
           value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
           className="search-input" />
-        <select value={sortBy} onChange={e => setSortBy(e.target.value)} className="sort-select">
+        <select value={sortBy} onChange={e => setSortBy(e.target.value)} className="form-select">
           <option value="date">Ordenar por data</option>
           <option value="amount">Ordenar por valor</option>
           <option value="description">Ordenar por nome</option>
