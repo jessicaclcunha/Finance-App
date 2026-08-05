@@ -144,37 +144,193 @@ const ExportData = ({ transactions, categories }) => {
   };
   reader.readAsText(file);
 };
+
+  /* ── Importar transações de um ficheiro CSV ──
+     Aceita o mesmo formato produzido por "Exportar CSV":
+     Data,Descrição,Tipo,Categoria,Valor
+     31/12/2025,Supermercado,Despesa,Alimentação,45.30
+
+     Também aceita ficheiros de outras origens desde que sigam
+     estas 5 colunas, com data em dd/mm/aaaa ou aaaa-mm-dd,
+     tipo "Receita"/"Despesa" (ou "income"/"expense"), e valor
+     com ponto ou vírgula decimal. */
+  const parseCSVLine = (line) => {
+    // Suporta campos entre aspas com vírgulas dentro (ex: "Renda, Casa")
+    const result = [];
+    let current = "";
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      if (char === '"') {
+        if (inQuotes && line[i + 1] === '"') { current += '"'; i++; }
+        else inQuotes = !inQuotes;
+      } else if (char === "," && !inQuotes) {
+        result.push(current);
+        current = "";
+      } else {
+        current += char;
+      }
+    }
+    result.push(current);
+    return result.map(v => v.trim());
+  };
+
+  const parseCSVDate = (raw) => {
+    if (!raw) return null;
+    // dd/mm/aaaa (formato pt-PT usado na exportação)
+    const ptMatch = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (ptMatch) {
+      const [, day, month, year] = ptMatch;
+      const d = new Date(Number(year), Number(month) - 1, Number(day));
+      return isNaN(d.getTime()) ? null : d;
+    }
+    // aaaa-mm-dd (ISO) ou outros formatos que o Date consiga interpretar
+    const d = new Date(raw);
+    return isNaN(d.getTime()) ? null : d;
+  };
+
+  const parseCSVAmount = (raw) => {
+    if (!raw) return NaN;
+    // aceita "45.30" ou "45,30"
+    const normalized = raw.replace(/\s/g, "").replace(",", ".");
+    return parseFloat(normalized);
+  };
+
+  const parseCSVType = (raw) => {
+    const v = (raw || "").trim().toLowerCase();
+    if (v === "receita" || v === "income") return "income";
+    if (v === "despesa" || v === "expense") return "expense";
+    return null;
+  };
+
+  const importFromCSV = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      try {
+        const text = event.target.result;
+        const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
+        if (lines.length < 2) {
+          alert("O ficheiro CSV não tem transações para importar.");
+          e.target.value = "";
+          return;
+        }
+
+        // Ignora a linha de cabeçalho
+        const dataLines = lines.slice(1);
+        const parsedRows = [];
+        const errors = [];
+
+        dataLines.forEach((line, idx) => {
+          const cols = parseCSVLine(line);
+          const [dateRaw, description, typeRaw, categoryName, amountRaw] = cols;
+
+          const date = parseCSVDate(dateRaw);
+          const type = parseCSVType(typeRaw);
+          const amount = parseCSVAmount(amountRaw);
+
+          if (!date || !type || isNaN(amount) || amount <= 0) {
+            errors.push(idx + 2); // +2: conta com o cabeçalho e índice 0-based
+            return;
+          }
+
+          const category = type === "expense"
+            ? categories.find(c => c.name.toLowerCase() === (categoryName || "").trim().toLowerCase())
+            : null;
+
+          parsedRows.push({
+            user_id: user.id,
+            category_id: category ? category.id : null,
+            description: description?.trim() || (type === "income" ? "Receita" : "Despesa"),
+            amount,
+            type,
+            date: date.toISOString(),
+            is_recurring: false,
+            recurring_key: null,
+            recurring_id: null,
+          });
+        });
+
+        if (parsedRows.length === 0) {
+          alert("Não foi possível ler nenhuma transação válida do ficheiro.");
+          e.target.value = "";
+          return;
+        }
+
+        const confirmMsg = errors.length > 0
+          ? `Foram encontradas ${parsedRows.length} transações válidas (${errors.length} linha(s) inválida(s) serão ignoradas: ${errors.join(", ")}). Importar?`
+          : `Foram encontradas ${parsedRows.length} transações. Importar?`;
+
+        if (!window.confirm(confirmMsg)) { e.target.value = ""; return; }
+
+        const { error } = await supabase.from("transactions").insert(parsedRows);
+
+        if (error) {
+          console.error(error);
+          alert("Erro ao importar as transações.");
+          e.target.value = "";
+          return;
+        }
+
+        alert(`${parsedRows.length} transação(ões) importada(s) com sucesso! A página será recarregada.`);
+        window.location.reload();
+      } catch (err) {
+        console.error(err);
+        alert("Erro ao ler o ficheiro CSV. Verifica se o formato está correto.");
+        e.target.value = "";
+      }
+    };
+    reader.readAsText(file);
+  };
+
   return (
     <div className="export-section">
       <h3 className="section-title" style={{ marginBottom: '20px' }}>Exportar & Backup</h3>
       <div className="export-grid">
+
+        {/* ── Cartão 1: Transações (CSV) ── */}
         <div className="export-card">
-          <h4 className="export-title">Exportar CSV</h4>
-          <p className="export-description">Tabela para Excel ou Google Sheets</p>
-          <button onClick={exportToCSV} className="btn btn-primary btn-small">Descarregar CSV</button>
+          <h4 className="export-title">Transações (CSV)</h4>
+          <p className="export-description">
+            Exporta para Excel/Sheets ou importa transações a partir de um ficheiro CSV
+          </p>
+          <div className="export-actions">
+            <button onClick={exportToCSV} className="btn btn-primary btn-small">
+              Exportar CSV
+            </button>
+            <label className="btn btn-secondary btn-small" style={{ cursor: 'pointer' }}>
+              Importar CSV
+              <input type="file" accept=".csv,text/csv" onChange={importFromCSV} style={{ display: 'none' }} />
+            </label>
+          </div>
         </div>
+
+        {/* ── Cartão 2: Backup Completo (JSON) ── */}
         <div className="export-card">
-          <h4 className="export-title">Exportar JSON</h4>
-          <p className="export-description">Dados em formato estruturado</p>
-          <button onClick={exportToJSON} className="btn btn-secondary btn-small">Descarregar JSON</button>
+          <h4 className="export-title">Backup Completo (JSON)</h4>
+          <p className="export-description">
+            Exporta os teus dados, cria um backup completo (inclui metas e recorrências) ou restaura um anterior
+          </p>
+          <div className="export-actions">
+            <button onClick={exportToJSON} className="btn btn-secondary btn-small">
+              Exportar JSON
+            </button>
+            <button onClick={createBackup} className="btn btn-success btn-small">
+              Criar Backup
+            </button>
+            <label className="btn btn-secondary btn-small" style={{ cursor: 'pointer' }}>
+              Restaurar
+              <input type="file" accept=".json" onChange={restoreBackup} style={{ display: 'none' }} />
+            </label>
+          </div>
         </div>
-        <div className="export-card">
-          <h4 className="export-title">Criar Backup</h4>
-          <p className="export-description">Backup completo de todos os dados</p>
-          <button onClick={createBackup} className="btn btn-success btn-small">Criar Backup</button>
-        </div>
-        <div className="export-card">
-          <h4 className="export-title">Restaurar Backup</h4>
-          <p className="export-description">Importar backup anterior</p>
-          <label className="btn btn-secondary btn-small" style={{ cursor: 'pointer' }}>
-            Escolher Ficheiro
-            <input type="file" accept=".json" onChange={restoreBackup} style={{ display: 'none' }} />
-          </label>
-        </div>
+
       </div>
       <div className="card" style={{ marginTop: '24px', background: 'var(--warning-light)' }}>
         <p style={{ fontSize: '13px', color: 'var(--burgundy-900)' }}>
-          ⚠️ <strong>Importante:</strong> Ao restaurar, os dados do backup são <em>adicionados</em> aos atuais (não substituem). Elimina manualmente duplicados se necessário.
+          ⚠️ <strong>Importante:</strong> Ao importar ou restaurar, os dados são <em>adicionados</em> aos atuais (não substituem). Elimina manualmente duplicados se necessário. Na importação de CSV, categorias sem correspondência exata pelo nome ficam como "Sem categoria".
         </p>
       </div>
     </div>

@@ -9,9 +9,9 @@
   gap: 16px;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 640px) {
   .export-grid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
@@ -21,6 +21,8 @@
   border-radius: 8px;
   border: 1px solid var(--beige-300);
   text-align: center;
+  display: flex;
+  flex-direction: column;
 }
 
 @media (min-width: 768px) {
@@ -46,6 +48,19 @@
 .export-description {
   font-size: 13px;
   color: var(--beige-700);
-  margin-bottom: 6px;
+  margin-bottom: 16px;
   min-height: 38px;
+  flex: 1;
+}
+
+.export-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.export-actions .btn {
+  flex: 1 1 auto;
+  min-width: 120px;
 }
